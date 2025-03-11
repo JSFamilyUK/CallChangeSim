@@ -189,7 +189,7 @@ V6.0 - 09/03/25
         - Live Bell Sounds / Playback
             Playback stopped by the Stand button will allow the current sequence to complete before playback actually ceases. The stand button will highlight dark red to confirm it has been pressed 
             Individual sound files for 12 bells obtained
-                Source sounds are from St Magnus the Martyr (26cwt i D)
+                Source sounds are from St Magnus the Martyr (26cwt in D)
                 Sound files pre-load when the page is opened 
             Duration values have been reduced as follows:
                 05 Bells - 0.30 seconds
