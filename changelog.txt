@@ -211,13 +211,19 @@ V6.1 - 10/03/25
         - Backup of live version taken
     
 V6.2 - 14/03/25
-    Add logo splash screen
-        - Add logo.jpg
-        - Update index.html to disply splash screen for 2 seconds
-        - Splash screen shows logo and then fades to site content
-        - Test and Live sites updated to match
-        - Version number update
-        - Backup of live version taken
+    Code changes and UI logo update
+        - Add logo splash screen
+            Add logo.jpg
+            Update index.html to disply splash screen for 2 seconds
+            Splash screen shows logo and then fades to site content
+            Test and Live sites updated to match
+            Version number update
+            Backup of live version taken
+        - Additional patter added for whittingtons on 12
+            Whittingtons: {
+                8: [1, 2, 7, 5, 3, 4, 6, 8],
+                12: [5, 3, 1, 2, 4, 6, 11, 9, 7, 8, 10, 12],
+            },
 
 
         
