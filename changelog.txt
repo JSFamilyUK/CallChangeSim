@@ -225,5 +225,13 @@ V6.2 - 14/03/25
                 12: [5, 3, 1, 2, 4, 6, 11, 9, 7, 8, 10, 12],
             },
 
-
+            
+V6.2.1 - 14/03/25
+    UI Change Only
+        - Splash Screen and Favicon update
+            Adjust splash screen image to max 400px for desktop
+            Update favicon to match logo
+        - Test and Live sites updated to match
+        - Version number update
+        - Backup of live version taken
         
