@@ -210,8 +210,14 @@ V6.1 - 10/03/25
         - Version number update
         - Backup of live version taken
     
-        
-TO FIX:
+V6.2 - 14/03/25
+    Add logo splash screen
+        - Add logo.jpg
+        - Update index.html to disply splash screen for 2 seconds
+        - Splash screen shows logo and then fades to site content
+        - Test and Live sites updated to match
+        - Version number update
+        - Backup of live version taken
 
-    Changing calling style resets the bells to their default order for the last sequence before standing
+
         
