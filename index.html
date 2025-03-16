@@ -949,7 +949,7 @@
       document.addEventListener('DOMContentLoaded', function () {
         const splashScreen = document.querySelector('.splash-screen');
 
-        // Wait for 2.2 seconds then fade out
+        // Wait for 2.5 seconds then fade out
         setTimeout(() => {
           splashScreen.classList.add('fade-out');
 
@@ -957,7 +957,7 @@
           setTimeout(() => {
             splashScreen.remove();
           }, 500); // Match this with the CSS transition duration
-        }, 2200);
+        }, 2500);
       });
 
       /*********************** Core Variables & Pattern Data ************************/
