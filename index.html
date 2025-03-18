@@ -1327,17 +1327,19 @@
             return;
           }
 
-          // When calling down, second bell must be two positions earlier than first
-          if (firstIndex - secondIndex !== 2) {
-            showError('Choose the bell to move then the bell it should follow');
+          // When calling down, first bell must be later in the change than the second
+          if (firstIndex < secondIndex) {
+            showError('Select bells in descending order');
             selectedBells = [];
             updateSelectionDisplay();
             return;
           }
 
-          // When calling down, first bell must be later in the change than the second
-          if (firstIndex < secondIndex) {
-            showError('Choose the bell to move then the bell it should follow');
+          // When calling down, second bell must be two positions earlier than first
+          if (firstIndex - secondIndex !== 2) {
+            showError(
+              `Bell ${first} must follow Bell ${currentOrder[firstIndex - 2]}`
+            );
             selectedBells = [];
             updateSelectionDisplay();
             return;
