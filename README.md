@@ -1,4 +1,4 @@
-# Call Change Simulator - Comprehensive User Guide
+# Call Change Simulator - User Guide
 
 ## Getting Started
 
