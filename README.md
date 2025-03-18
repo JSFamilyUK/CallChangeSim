@@ -1,147 +1,202 @@
-# Call Change Simulator User Guide
-
-## Introduction
-
-The Call Change Simulator is a web-based tool designed to help bell ringers practice and learn call changes. It provides a visual and auditory simulation of bell ringing, allowing users to practice different patterns and changes on various numbers of bells.
+# Call Change Simulator - Comprehensive User Guide
 
 ## Getting Started
 
 ### Basic Setup
 
-1. Open the Call Change Simulator in your web browser
-2. Select the number of bells you want to practice with (5, 6, 8, 10, or 12 bells)
-3. The simulator will display the current bell order and provide controls for making changes
+1. When you first open the simulator, you'll see:
+
+   - A row of bell number buttons (5, 6, 8, 10, 12)
+   - The current bell order display
+   - A selection area for making changes
+   - Control buttons (Go/Stand)
+   - Three control icons at the top right (Patterns, Options, Reset)
+
+2. Select your number of bells:
+   - Click any bell number button (6 bells is default)
+   - The current order will show these bells in rounds (1234...)
+   - Bells 10, 11, and 12 are displayed as 0, E, and T respectively
 
 ### Understanding the Display
 
-- The current bell order is shown at the top of the screen
-- Each bell is represented by a number (1-9) or letter (0 for 10, E for 11, T for 12)
-- The bells are displayed in their current order from left to right
+- The main display shows bells in their current order
 - Recently swapped bells are highlighted with a red border
-- Bells in their correct position (when a pattern is selected) are highlighted in green
+- Bells in their correct position (when working towards a pattern) show with a green background
+- The selection area below shows available bells for making changes
 
-## Core Features
+## Making Changes
 
-### Making Changes
+### Calling Up (Default Mode)
 
-1. **Calling Up (Default Mode)**
+1. Select two adjacent bells in ascending order:
+   - Click the first bell number
+   - Click the next higher bell number
+   - Example: Click 2, then 3 to swap these bells
+2. Invalid selections will show an error message:
+   - Bells must be adjacent
+   - Must select in ascending order
+   - Error messages auto-clear after 3 seconds
 
-   - Select two adjacent bells in ascending order
-   - The bells will swap positions
-   - Example: Select 2 then 3 to swap bells 2 and 3
+### Calling Down Mode
 
-2. **Calling Down**
+1. Access through the Options menu (gear icon):
+   - Switch between "Call Up" and "Call Down"
+   - A "Lead" button appears when in Call Down mode
+2. Making changes:
+   - Select the bell you want to move down
+   - Select the bell it should follow
+   - Example: Select 4 then 2 to move 4 after 2
+3. Using the Lead button:
+   - Select a bell in 2nds place
+   - Click "Lead" to move it to lead position
 
-   - Toggle to "Call Down" mode using the Options menu
-   - Select a bell to move down, then select the bell it should follow
-   - Example: Select 4 then 2 to move bell 4 to follow bell 2
+## Pattern Work
 
-3. **Lead Changes**
-   - In "Call Down" mode, select the bell in 2nds place
-   - Click the "Lead" button to move it into lead position
+### Using the Patterns Menu
 
-### Pattern Selection
+1. Click the Patterns icon (list icon):
+   - Shows available patterns for your current bell count
+   - Each pattern shows name and target bell order
+2. Select a pattern:
+   - Click any pattern to set it as your target
+   - The current order display will show green highlights for bells in correct positions
+   - Pattern name and order appears below the current order
 
-1. Click the Patterns icon (list icon) to open the Patterns menu
-2. Select your desired number of bells
-3. Choose from available patterns:
+### Available Patterns
 
-   - Rounds
-   - Back Rounds
-   - Queens
-   - Kings
-   - Tittums
-   - Exploding Tittums
-   - And more...
+- Rounds: Standard ascending order (1234...)
+- Back Rounds: Descending order except last bell
+- Queens: Alternating odd/even bells
+- Kings: Descending pairs of bells
+- Tittums: Alternating bells from front/back
+- Exploding Tittums: Variation of tittums
+- And more specialized patterns depending on bell count
 
-4. The selected pattern will be displayed below the current bell order
-5. Bells in their correct position will be highlighted in green
+## Playback Features
 
-### Playback Controls
+### Basic Controls
 
-1. **Go Button**
+1. Go Button:
+   - Starts the bells ringing in current order
+   - Changes can be made while ringing
+   - Pattern continues until Stand is pressed
+2. Stand Button:
+   - Stops the ringing after completing current sequence
+   - Any pending changes are applied before stopping
 
-   - Starts the bell ringing sequence
-   - Bells will ring in their current order
-   - Changes can be made during playback
+### Options Menu (Gear Icon)
 
-2. **Stand Button**
-   - Stops the current ringing sequence
-   - Changes will be applied when the sequence completes
+1. Calling Style:
+
+   - Toggle between Call Up and Call Down modes
+   - Changes validation rules and available moves
+
+2. Open Handstroke:
+
+   - Adds a pause between sequences
+   - Creates more realistic ringing rhythm
+   - Recommended for practice
+
+3. Offline Mode:
+
+   - Uses synthesized tones instead of bell sounds
+   - Useful when internet connection is poor
+   - More consistent sound timing
+
+4. Spatial Bell Sounds:
+   - Creates left-to-right sound positioning
+   - Helps identify bell positions by ear
+   - Most effective with headphones
 
 ## Advanced Features
 
-### Options Menu
-
-Access the Options menu by clicking the gear icon to configure:
-
-1. **Calling Style**
-
-   - Toggle between "Call Up" and "Call Down" modes
-   - Affects how changes are made and interpreted
-
-2. **Open Handstroke**
-
-   - When enabled, adds a pause between each sequence
-   - Simulates the natural rhythm of handstroke and backstroke
-
-3. **Offline Mode**
-
-   - Switches to synthesized tones instead of bell sounds
-   - Useful when internet connection is unavailable
-   - Provides consistent sound quality
-
-4. **Spatial Bell Sounds**
-   - When enabled, bell sounds are panned left to right
-   - Creates a more realistic spatial audio experience
-   - Helps identify bell positions by sound
-
 ### History Tracking
 
-- Previous changes are displayed in a table below
-- Shows the change made, resulting bell order, and pattern achieved
-- Click any history entry to restore that bell order
+1. View previous changes:
+
+   - Table shows all changes made
+   - Displays resulting bell order
+   - Shows any patterns achieved
+
+2. Using history:
+   - Click any row to return to that state
+   - Useful for practicing specific sequences
+   - Helps understand how patterns were achieved
 
 ### Reset Function
 
-- Click the reset icon to:
-  - Return to the default bell order
-  - Clear the change history
-  - Reset the pattern selection
-  - Stop any ongoing playback
+1. Click the Reset icon to:
+   - Return bells to rounds
+   - Clear change history
+   - Stop any ongoing playback
+   - Clear pattern selection
 
-## Tips and Best Practices
+## Tips for Effective Practice
 
-1. **Learning Patterns**
+### Starting Out
 
-   - Start with simple patterns like Rounds or Queens
-   - Use the pattern highlighting to guide your changes
-   - Practice making changes without playback first
+1. Begin with fewer bells:
 
-2. **Using Playback**
+   - Start with 5 or 6 bells
+   - Master basic changes before adding more bells
+   - Practice without playback initially
 
-   - Begin with slower changes to get comfortable
-   - Use the Open Handstroke option for more realistic practice
-   - Make changes during playback to practice timing
+2. Pattern Work:
+   - Start with simple patterns (Queens, Kings)
+   - Use pattern highlighting as a guide
+   - Practice getting to and from rounds
 
-3. **Calling Down**
+### Advanced Practice
 
-   - Remember to select the bell to move first
-   - Then select where it should go
-   - Use the Lead button for moving bells into lead position
+1. Using Playback:
 
-4. **Troubleshooting**
-   - If no sound plays, check your device's volume and silent mode
-   - Use Offline Mode if bell sounds don't load
-   - The error message area will display helpful guidance
+   - Start with slower changes (more bells = faster rhythm)
+   - Use Open Handstroke for more realistic practice
+   - Practice making changes while ringing
 
-## Support and Feedback
+2. Calling Down:
+   - Master Calling Up first
+   - Practice using the Lead button effectively
+   - Think ahead about bell positions
 
-- Visit callchangesim.co.uk for the latest version
-- Use the WhatsApp icon to send feedback or request new features
-- Consider supporting the project through the coffee button
+## Troubleshooting
 
-## Version Information
+### Common Issues
 
-Current Version: 6.2.1
-Copyright © 2025 callchangesim.co.uk
+1. No Sound:
+
+   - Check device volume and silent mode
+   - Try Offline Mode if bell sounds don't load
+   - Ensure audio permissions are granted
+
+2. Error Messages:
+
+   - Read the message carefully
+   - Check calling direction (Up/Down)
+   - Verify bell selection order
+
+3. Performance:
+   - Use Offline Mode on slower connections
+   - Reduce bell count if playback is choppy
+   - Close other tabs/applications
+
+## Additional Information
+
+### Support
+
+- Version information shown at bottom of page
+- Contact via email for support
+- Regular updates and improvements
+
+### Best Practices
+
+1. Regular Practice:
+
+   - Start with short sessions
+   - Focus on accuracy over speed
+   - Learn standard patterns first
+
+2. Progressive Learning:
+   - Master each number of bells before moving up
+   - Practice both calling styles
+   - Learn to recognize patterns by sight
