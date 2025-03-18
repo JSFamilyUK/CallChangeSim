@@ -644,11 +644,11 @@
         max-width: 400px;
         height: auto;
       }
-      
+
       a {
-  				color: black;
-  				text-decoration: none; /* no underline */
-			}
+        color: black;
+        text-decoration: none; /* no underline */
+      }
     </style>
   </head>
   <body>
@@ -919,7 +919,11 @@
 
     <div class="image-wrapper">
       <br />
-      <span class="center-text">v6.2.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk">contact@callchangesim.co.uk</a></span>
+      <span class="center-text"
+        >v6.2.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+          >contact@callchangesim.co.uk</a
+        ></span
+      >
     </div>
 
     <script>
@@ -1323,11 +1327,9 @@
             return;
           }
 
-          // When calling down, prevent selecting adjacent bells
-          if (Math.abs(firstIndex - secondIndex) === 1) {
-            showError(
-              'Select the bell to move down, then the bell it should follow'
-            );
+          // When calling down, second bell must be two positions earlier than first
+          if (firstIndex - secondIndex !== 2) {
+            showError('Choose the bell to move then the bell it should follow');
             selectedBells = [];
             updateSelectionDisplay();
             return;
@@ -1335,9 +1337,7 @@
 
           // When calling down, first bell must be later in the change than the second
           if (firstIndex < secondIndex) {
-            showError(
-              'Select the bell to move down, then the bell it should follow'
-            );
+            showError('Choose the bell to move then the bell it should follow');
             selectedBells = [];
             updateSelectionDisplay();
             return;
