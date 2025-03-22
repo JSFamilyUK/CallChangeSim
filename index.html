@@ -516,7 +516,8 @@
 
       /* Icon container styling */
       .options-container {
-        width: 320px; /* Change from 100% to fit-content */
+        position: relative;
+        width: 320px;
         margin: 0 auto;
         text-align: right;
         padding: 0;
@@ -676,19 +677,17 @@
       .pattern-sequence-box {
         display: none;
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        top: 0;
+        left: 0;
+        width: 90%;
+        height: 95%;
         background: white;
         color: black;
-        border: 1px solid #ccc;
-        border-radius: 5px;
+        border: none;
+        border-radius: 0;
         padding: 20px;
-        width: 80%;
-        max-width: 600px;
-        max-height: 80vh;
         overflow-y: auto;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        box-shadow: none;
         z-index: 1001;
       }
 
@@ -716,10 +715,69 @@
       }
 
       .pattern-sequence-selected {
-        border: 1px solid #eee;
-        border-radius: 5px;
-        padding: 10px;
-        margin-top: 0;
+        margin-top: 10px;
+        min-height: 40px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 8px;
+        background: #f9f9f9;
+      }
+
+      .pattern-sequence-selected ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        min-height: 24px;
+      }
+
+      .pattern-sequence-selected li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 8px;
+        margin: 2px 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .pattern-sequence-selected li.selected {
+        background: #e3f2fd;
+        border-color: #2196f3;
+      }
+
+      .pattern-sequence-selected .pattern-name {
+        flex-grow: 1;
+      }
+
+      .pattern-sequence-selected .pattern-actions {
+        display: flex;
+        gap: 4px;
+        margin-left: 8px;
+      }
+
+      #begin-sequence-button {
+        display: none;
+        margin-top: 10px;
+        width: 100%;
+        padding: 8px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.3s;
+        height: 40px;
+      }
+
+      #begin-sequence-button:hover {
+        background-color: #45a049;
+      }
+
+      .pattern-sequence-container {
+        margin-bottom: 50px; /* Reserve space for the button */
       }
 
       .pattern-sequence-controls {
@@ -737,11 +795,13 @@
       }
 
       .pattern-sequence-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        max-height: 200px;
+        max-height: calc(100vh - 200px);
         overflow-y: auto;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f9f9f9;
       }
 
       .pattern-sequence-item {
@@ -864,6 +924,231 @@
         background-color: #0056b3;
         border: 2px solid #003d80;
       }
+
+      /* Reset Options Dialog styling */
+      .reset-options-box {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        text-align: left;
+      }
+
+      .reset-options-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .reset-options-content {
+        margin-top: 20px;
+        text-align: center; /* Center all content */
+        padding-bottom: 10px;
+        display: flex;
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items horizontally */
+        gap: 0; /* Remove all space between options */
+      }
+
+      .reset-options-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .reset-options-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        margin: 4px 0;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .reset-options-item.selected {
+        border: 2px solid #007bff;
+      }
+
+      .reset-options-item:hover {
+        background: #e9ecef;
+      }
+
+      .reset-options-item.selected:hover {
+        background: #f8f9fa;
+      }
+
+      .reset-options-button {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .reset-options-button:hover {
+        background-color: #0056b3;
+      }
+
+      .reset-options-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* Reset Options Menu styling */
+      .reset-options-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #007bff;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 150px;
+        margin-top: 5px;
+        text-align: left;
+      }
+
+      .reset-options-menu::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: 10px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid #007bff;
+      }
+
+      .reset-options-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #007bff;
+        transition: background-color 0.2s;
+        white-space: nowrap;
+      }
+
+      .reset-options-item:hover {
+        background-color: #f0f0f0;
+      }
+
+      .reset-options-item:first-child {
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+
+      .reset-options-item:last-child {
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+      /* Pattern Sequence Counter styling */
+      .pattern-sequence-counter {
+        margin-top: 5px;
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      .pattern-sequence-counter a {
+        color: #666;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .pattern-sequence-counter a:hover {
+        text-decoration: underline;
+      }
+
+      .sequence-popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 1002;
+        min-width: 300px;
+      }
+
+      .sequence-popup ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .sequence-popup li {
+        padding: 8px 0;
+        color: #666;
+      }
+
+      .sequence-popup li.current {
+        color: #28a745;
+        font-weight: bold;
+      }
+
+      .sequence-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1001;
+      }
+
+      .sequence-popup h3 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-size: 1.2em;
+      }
+
+      .sequence-popup li {
+        padding: 8px 0;
+        color: #666;
+        display: flex;
+        align-items: center;
+      }
+
+      .sequence-popup li::before {
+        content: attr(data-number);
+        margin-right: 10px;
+        color: #999;
+        font-weight: bold;
+      }
+
+      .sequence-popup li.current {
+        color: #28a745;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -899,16 +1184,19 @@
           d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"
         />
       </svg>
-      <svg
-        class="options-icon"
-        onclick="resetSimulator()"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
-        />
-      </svg>
+      <div style="position: relative">
+        <svg
+          class="options-icon"
+          onclick="toggleResetOptions()"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+          />
+        </svg>
+        <div class="reset-options-menu" id="reset-options-menu"></div>
+      </div>
       <button class="help-button" onclick="toggleInfoBox()">?</button>
     </div>
     <div class="bell-buttons-container">
@@ -1084,7 +1372,7 @@
         </div>
         <div class="patterns-controls">
           <button class="patterns-button" onclick="openPatternSequenceDialog()">
-            Build Sequence
+            Create a Call Change Sequence
           </button>
           <button
             class="patterns-button"
@@ -1176,7 +1464,7 @@
     <div class="pattern-sequence-box" id="pattern-sequence-box">
       <div class="pattern-sequence-header">
         <div class="patterns-title-container">
-          <h2 class="patterns-title">Build Pattern Sequence</h2>
+          <h2 class="patterns-title">Pattern Sequence</h2>
           <button class="close-icon" onclick="closePatternSequenceDialog()">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -1188,7 +1476,7 @@
       </div>
       <div class="pattern-sequence-content">
         <div class="pattern-sequence-selected">
-          <h3>Selected Sequence</h3>
+          <h3>Current Sequence</h3>
           <ul class="pattern-sequence-list" id="selected-patterns"></ul>
         </div>
         <div class="pattern-sequence-controls">
@@ -1208,22 +1496,49 @@
             class="pattern-sequence-button"
             onclick="clearPatternSequence()"
           >
-            Clear
+            Clear All
           </button>
         </div>
         <div class="pattern-sequence-confirm">
           <button
             class="pattern-sequence-button"
             onclick="confirmPatternSequence()"
+            style="display: none"
+            id="begin-sequence-button"
           >
-            Confirm Sequence
+            Begin Calling This Sequence
           </button>
         </div>
         <div class="pattern-sequence-available">
-          <h3>Available Patterns</h3>
+          <h3>Add a Pattern</h3>
           <ul class="pattern-sequence-list" id="available-patterns"></ul>
         </div>
       </div>
+    </div>
+
+    <!-- Reset Options Dialog -->
+    <div class="reset-options-box" id="reset-options-box">
+      <div class="reset-options-header">
+        <div class="patterns-title-container">
+          <h2 class="patterns-title">Reset Options</h2>
+          <button class="close-icon" onclick="closeResetOptionsDialog()">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="reset-options-content">
+        <div id="reset-options-list"></div>
+      </div>
+    </div>
+
+    <div class="sequence-popup-overlay"></div>
+    <div class="sequence-popup">
+      <h3>Upcoming Changes</h3>
+      <ul id="sequence-list"></ul>
     </div>
 
     <script>
@@ -1382,25 +1697,19 @@
           return;
         }
 
-        // Clear pattern sequence when changing bell count
-        patternSequence = [];
-        currentPatternIndex = 0;
-        selectedSequencePattern = null;
-        const counter = document.getElementById('pattern-sequence-counter');
-        if (counter) {
-          counter.remove();
-        }
-
-        // Hide the clear sequence button
-        const clearSequenceButton = document.getElementById(
-          'clear-sequence-button'
-        );
-        if (clearSequenceButton) {
-          clearSequenceButton.style.display = 'none';
-        }
+        // Store the current pattern sequence if it exists
+        const currentSequence = [...patternSequence];
+        const currentIndex = currentPatternIndex;
 
         // Apply the bell count change immediately if not playing
         applyBellCount(count);
+
+        // Restore the pattern sequence if it exists
+        if (currentSequence.length > 0) {
+          patternSequence = currentSequence;
+          currentPatternIndex = currentIndex;
+          updatePatternSequenceCounter();
+        }
       }
 
       function applyBellCount(count) {
@@ -1995,6 +2304,133 @@
       }
 
       function playSequence() {
+        // Handle any pending reset at the start of the function
+        if (pendingReset) {
+          switch (pendingReset) {
+            case 'bells':
+              // Reset bells to rounds order
+              currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+              selectedBells = [];
+              updateDisplay();
+              updateHistory('Go!', currentOrder);
+              break;
+            case 'patterns':
+              // Reset to first pattern in sequence without clearing the sequence
+              if (patternSequence.length > 0) {
+                // First clear the history array and table
+                history = [];
+                const tbody = document.querySelector('#change-history tbody');
+                if (tbody) {
+                  tbody.innerHTML = '';
+                  const headerRow = document.createElement('tr');
+                  headerRow.innerHTML = `
+                    <th>Change</th>
+                    <th>Bell Order</th>
+                  `;
+                  tbody.appendChild(headerRow);
+                }
+
+                // Then reset bells to rounds order
+                currentOrder = Array.from(
+                  { length: numBells },
+                  (_, i) => i + 1
+                );
+                selectedBells = [];
+                updateDisplay();
+                updateHistory('Go!', currentOrder);
+
+                // Reset pattern sequence
+                currentPatternIndex = 0;
+                // Update the dropdown to match the pattern
+                const dropdown = document.getElementById('pattern-dropdown');
+                dropdown.value = patternSequence[0];
+
+                // Now apply the pattern and update all displays
+                applyPattern(patternSequence[0]);
+
+                // Force update the pattern display and counter
+                const errorMessageDiv =
+                  document.getElementById('error-message');
+                const matchOrder =
+                  patterns[patternSequence[0]]?.[numBells] || [];
+                const displayName =
+                  patternSequence[0] === 'Exploding Tittums'
+                    ? 'Exp. Tittums'
+                    : patternSequence[0];
+                errorMessageDiv.style.color = '#888';
+                errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+                  .map(convertBellNumberForDisplay)
+                  .join(' ')}`;
+
+                // Update the pattern sequence counter
+                const counter = document.getElementById(
+                  'pattern-sequence-counter'
+                );
+                if (counter) {
+                  counter.textContent = `Pattern 1 of ${patternSequence.length}`;
+                } else {
+                  const newCounter = document.createElement('div');
+                  newCounter.className = 'pattern-sequence-counter';
+                  newCounter.id = 'pattern-sequence-counter';
+                  newCounter.textContent = `Pattern 1 of ${patternSequence.length}`;
+                  errorMessageDiv.appendChild(newCounter);
+                }
+
+                // Show the clear sequence button
+                const clearSequenceButton = document.getElementById(
+                  'clear-sequence-button'
+                );
+                if (clearSequenceButton) {
+                  clearSequenceButton.style.display = 'inline-block';
+                }
+              }
+              break;
+            case 'everything':
+              // Reset the pattern dropdown to default
+              const dropdown = document.getElementById('pattern-dropdown');
+              dropdown.value = 'Choose Desired Pattern';
+
+              // Reset the current order to the default for current number of bells
+              currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+
+              // Clear history except for the initial "Go!" entry
+              history = [];
+              updateHistory('Go!', currentOrder);
+
+              // Update the display
+              updateDisplay();
+
+              // Clear any error messages
+              document.getElementById('error-message').innerText = '';
+
+              // Clear any selected bells
+              selectedBells = [];
+              updateSelectionDisplay();
+              clearHighlight();
+
+              // Clear pattern sequence and update UI
+              patternSequence = [];
+              currentPatternIndex = 0;
+              selectedSequencePattern = null;
+              const counter = document.getElementById(
+                'pattern-sequence-counter'
+              );
+              if (counter) {
+                counter.remove();
+              }
+
+              // Hide the clear sequence button
+              const clearSequenceButton = document.getElementById(
+                'clear-sequence-button'
+              );
+              if (clearSequenceButton) {
+                clearSequenceButton.style.display = 'none';
+              }
+              break;
+          }
+          pendingReset = null;
+        }
+
         if (!isPlaying) {
           // Remove stopping class when playback actually stops
           const standButton = document.querySelector(
@@ -2506,7 +2942,37 @@
         const overlay = document.getElementById('overlay');
         patternSequenceBox.style.display = 'block';
         overlay.style.display = 'block';
-        updateAvailablePatterns();
+
+        // Get the currently selected bell count from the patterns dialog
+        const selectedBellButton = document.querySelector(
+          '.patterns-bell-button.selected'
+        );
+        const selectedBellCount = selectedBellButton
+          ? parseInt(selectedBellButton.textContent)
+          : numBells;
+
+        // Update available patterns based on the selected bell count
+        const availablePatternsList =
+          document.getElementById('available-patterns');
+        availablePatternsList.innerHTML = '';
+
+        for (const [name, orders] of Object.entries(patterns)) {
+          if (orders[selectedBellCount]) {
+            const li = document.createElement('li');
+            li.className = 'pattern-sequence-item';
+            li.textContent =
+              name === 'Exploding Tittums' ? 'Exp. Tittums' : name;
+            li.onclick = () => {
+              // Add pattern directly on click
+              patternSequence.push(name);
+              // Set the newly added pattern as selected
+              selectedSequencePattern = patternSequence.length - 1;
+              updateSelectedPatterns();
+            };
+            availablePatternsList.appendChild(li);
+          }
+        }
+
         updateSelectedPatterns();
       }
 
@@ -2524,8 +2990,16 @@
           document.getElementById('available-patterns');
         availablePatternsList.innerHTML = '';
 
+        // Get the currently selected bell count from the patterns dialog
+        const selectedBellButton = document.querySelector(
+          '.patterns-bell-button.selected'
+        );
+        const selectedBellCount = selectedBellButton
+          ? parseInt(selectedBellButton.textContent)
+          : numBells;
+
         for (const [name, orders] of Object.entries(patterns)) {
-          if (orders[numBells]) {
+          if (orders[selectedBellCount]) {
             const li = document.createElement('li');
             li.className = 'pattern-sequence-item';
             li.textContent =
@@ -2558,6 +3032,13 @@
           li.onclick = () => selectSequencePattern(index);
           selectedPatternsList.appendChild(li);
         });
+
+        // Update the Begin Calling This Sequence button visibility
+        const beginButton = document.getElementById('begin-sequence-button');
+        if (beginButton) {
+          beginButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
       }
 
       function selectSequencePattern(index) {
@@ -2577,6 +3058,33 @@
             selectedSequencePattern = patternSequence.length - 1;
           }
           updateSelectedPatterns();
+          // Hide the Begin Calling This Sequence button if there are no patterns left
+          if (patternSequence.length === 0) {
+            document.getElementById('begin-sequence-button').style.display =
+              'none';
+          }
+        }
+      }
+
+      function clearPatternSequence() {
+        patternSequence = [];
+        selectedSequencePattern = null;
+        updateSelectedPatterns();
+        updatePatternSequenceCounter();
+        // Hide the Begin Calling This Sequence button when clearing the sequence
+        document.getElementById('begin-sequence-button').style.display = 'none';
+      }
+
+      function addPatternToSequence(pattern) {
+        if (!patternSequence.includes(pattern)) {
+          patternSequence.push(pattern);
+          selectedSequencePattern = patternSequence.length - 1;
+          updateSelectedPatterns();
+          // Show the Begin Calling This Sequence button when there are patterns
+          const beginButton = document.getElementById('begin-sequence-button');
+          if (beginButton) {
+            beginButton.style.display = 'block';
+          }
         }
       }
 
@@ -2605,20 +3113,51 @@
         }
       }
 
-      function clearPatternSequence() {
-        patternSequence = [];
-        selectedSequencePattern = null;
-        updateSelectedPatterns();
-        updatePatternSequenceCounter();
-      }
-
       function confirmPatternSequence() {
         if (patternSequence.length > 0) {
-          currentPatternIndex = 0;
-          applyPattern(patternSequence[0]);
-          updatePatternSequenceCounter();
-          closePatternSequenceDialog();
-          closePatternsDialog();
+          // Get the currently selected bell count from the patterns dialog
+          const selectedBellButton = document.querySelector(
+            '.patterns-bell-button.selected'
+          );
+          const selectedBellCount = selectedBellButton
+            ? parseInt(selectedBellButton.textContent)
+            : numBells;
+
+          // If the selected bell count is different from current, update it first
+          if (selectedBellCount !== numBells) {
+            // Store the first pattern to apply after the bell count change
+            const firstPattern = patternSequence[0];
+
+            // Update the main simulator's bell number buttons
+            document.querySelectorAll('.bell-number-button').forEach(button => {
+              const buttonCount = parseInt(button.textContent);
+              if (!isNaN(buttonCount)) {
+                button.classList.toggle(
+                  'selected',
+                  buttonCount === selectedBellCount
+                );
+              }
+            });
+
+            // Apply the bell count change and wait for it to complete
+            setBells(selectedBellCount);
+
+            // Wait for the bell count change to complete before applying the pattern
+            setTimeout(() => {
+              currentPatternIndex = 0;
+              applyPattern(firstPattern);
+              updatePatternSequenceCounter();
+              closePatternSequenceDialog();
+              closePatternsDialog();
+            }, 200); // Increased delay to ensure bell count change is complete
+          } else {
+            // If no bell count change needed, apply pattern immediately
+            currentPatternIndex = 0;
+            applyPattern(patternSequence[0]);
+            updatePatternSequenceCounter();
+            closePatternSequenceDialog();
+            closePatternsDialog();
+          }
         }
       }
 
@@ -2637,15 +3176,15 @@
             const counter = document.createElement('div');
             counter.className = 'pattern-sequence-counter';
             counter.id = 'pattern-sequence-counter';
-            counter.textContent = `Pattern ${currentPatternIndex + 1} of ${
-              patternSequence.length
-            }`;
+            counter.innerHTML = `<a onclick="showSequencePopup()">Pattern ${
+              currentPatternIndex + 1
+            } of ${patternSequence.length}</a>`;
             errorMessageDiv.appendChild(counter);
           } else {
             // Update existing counter
-            existingCounter.textContent = `Pattern ${
+            existingCounter.innerHTML = `<a onclick="showSequencePopup()">Pattern ${
               currentPatternIndex + 1
-            } of ${patternSequence.length}`;
+            } of ${patternSequence.length}</a>`;
           }
           // Show the clear sequence button
           clearSequenceButton.style.display = 'inline-block';
@@ -2655,6 +3194,43 @@
           // Hide the clear sequence button
           clearSequenceButton.style.display = 'none';
         }
+      }
+
+      function showSequencePopup() {
+        const popup = document.querySelector('.sequence-popup');
+        const overlay = document.querySelector('.sequence-popup-overlay');
+        const list = document.getElementById('sequence-list');
+
+        // Clear and populate the list
+        list.innerHTML = '';
+        patternSequence.forEach((pattern, index) => {
+          const li = document.createElement('li');
+          li.setAttribute('data-number', (index + 1).toString());
+          li.textContent =
+            pattern === 'Exploding Tittums' ? 'Exp. Tittums' : pattern;
+          if (index === currentPatternIndex) {
+            li.classList.add('current');
+          }
+          list.appendChild(li);
+        });
+
+        // Show popup and overlay
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+
+        // Add click handlers to dismiss
+        const dismissPopup = () => {
+          popup.style.display = 'none';
+          overlay.style.display = 'none';
+        };
+
+        overlay.onclick = dismissPopup;
+        popup.onclick = dismissPopup;
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            dismissPopup();
+          }
+        });
       }
 
       function clearPatternSequenceFromDialog() {
@@ -2689,6 +3265,323 @@
         patternsBox.style.display = 'none';
         overlay.style.display = 'none';
         patternsBox.scrollTop = 0;
+      }
+
+      function showResetOptions() {
+        const resetOptionsBox = document.getElementById('reset-options-box');
+        const overlay = document.getElementById('overlay');
+        const resetOptionsList = document.getElementById('reset-options-list');
+
+        // Clear previous options
+        resetOptionsList.innerHTML = '';
+
+        // Create options based on whether there's a pattern sequence
+        const hasSequence = patternSequence.length > 0;
+
+        if (hasSequence) {
+          // Four options when there's a sequence
+          const options = [
+            { text: 'Reset Bells', action: resetBells },
+            { text: 'Reset Patterns', action: resetPatterns },
+            { text: 'Reset Both', action: resetBoth },
+            { text: 'Reset Everything', action: resetEverything },
+          ];
+
+          options.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'pattern-sequence-button';
+            button.textContent = option.text;
+            button.onclick = () => {
+              option.action();
+              closeResetOptionsDialog();
+            };
+            resetOptionsList.appendChild(button);
+          });
+        } else {
+          // Two options when there's no sequence
+          const options = [
+            { text: 'Reset Bells', action: resetBells },
+            { text: 'Reset Everything', action: resetEverything },
+          ];
+
+          options.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'pattern-sequence-button';
+            button.textContent = option.text;
+            button.onclick = () => {
+              option.action();
+              closeResetOptionsDialog();
+            };
+            resetOptionsList.appendChild(button);
+          });
+        }
+
+        resetOptionsBox.style.display = 'block';
+        overlay.style.display = 'block';
+      }
+
+      function closeResetOptionsDialog() {
+        const resetOptionsBox = document.getElementById('reset-options-box');
+        const overlay = document.getElementById('overlay');
+        resetOptionsBox.style.display = 'none';
+        overlay.style.display = 'none';
+      }
+
+      function resetBells() {
+        if (isPlaying) {
+          // If playback is active, queue the reset without stopping playback
+          pendingReset = 'bells';
+          return;
+        }
+
+        // Simply reset bells to rounds order without affecting playback
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+        selectedBells = [];
+        updateDisplay();
+        updateHistory('Go!', currentOrder);
+      }
+
+      function resetPatterns() {
+        if (isPlaying) {
+          // If playback is active, queue the reset without stopping playback
+          pendingReset = 'patterns';
+          return;
+        }
+
+        // Clear the history array first
+        history = [];
+
+        // Clear the history table's tbody
+        const tbody = document.querySelector('#change-history tbody');
+        if (tbody) {
+          tbody.innerHTML = '';
+          const headerRow = document.createElement('tr');
+          headerRow.innerHTML = `
+            <th>Change</th>
+            <th>Bell Order</th>
+          `;
+          tbody.appendChild(headerRow);
+        }
+
+        // Reset bells to rounds order
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+        selectedBells = [];
+        updateDisplay();
+
+        // Update history with just the initial "Go!" entry
+        updateHistory('Go!', currentOrder);
+
+        // Then reset to first pattern in sequence without clearing the sequence
+        if (patternSequence.length > 0) {
+          currentPatternIndex = 0;
+          // First update the dropdown to match the pattern
+          const dropdown = document.getElementById('pattern-dropdown');
+          dropdown.value = patternSequence[0];
+
+          // Then apply the pattern and update all displays
+          applyPattern(patternSequence[0]);
+
+          // Force update the pattern display and counter
+          const errorMessageDiv = document.getElementById('error-message');
+          const matchOrder = patterns[patternSequence[0]]?.[numBells] || [];
+          const displayName =
+            patternSequence[0] === 'Exploding Tittums'
+              ? 'Exp. Tittums'
+              : patternSequence[0];
+          errorMessageDiv.style.color = '#888';
+          errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+            .map(convertBellNumberForDisplay)
+            .join(' ')}`;
+
+          // Update the pattern sequence counter
+          const counter = document.getElementById('pattern-sequence-counter');
+          if (counter) {
+            counter.textContent = `Pattern 1 of ${patternSequence.length}`;
+          } else {
+            const newCounter = document.createElement('div');
+            newCounter.className = 'pattern-sequence-counter';
+            newCounter.id = 'pattern-sequence-counter';
+            newCounter.textContent = `Pattern 1 of ${patternSequence.length}`;
+            errorMessageDiv.appendChild(newCounter);
+          }
+
+          // Show the clear sequence button
+          const clearSequenceButton = document.getElementById(
+            'clear-sequence-button'
+          );
+          if (clearSequenceButton) {
+            clearSequenceButton.style.display = 'inline-block';
+          }
+        }
+      }
+
+      function resetBoth() {
+        if (isPlaying) {
+          // If playback is active, stop it and apply the reset after
+          stopPlayback();
+          pendingReset = 'both';
+          return;
+        }
+
+        resetBells();
+        resetPatterns();
+      }
+
+      function resetEverything() {
+        if (isPlaying) {
+          // If playback is active, queue the reset without stopping playback
+          pendingReset = 'everything';
+          return;
+        }
+
+        // Reset the pattern dropdown to default
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
+        // Reset the current order to the default for current number of bells
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+
+        // Clear history except for the initial "Go!" entry
+        history = [];
+        updateHistory('Go!', currentOrder);
+
+        // Update the display
+        updateDisplay();
+
+        // Clear any error messages
+        document.getElementById('error-message').innerText = '';
+
+        // Clear any selected bells
+        selectedBells = [];
+        updateSelectionDisplay();
+        clearHighlight();
+
+        // Clear pattern sequence and update UI
+        patternSequence = [];
+        currentPatternIndex = 0;
+        selectedSequencePattern = null;
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+
+        // Hide the clear sequence button
+        const clearSequenceButton = document.getElementById(
+          'clear-sequence-button'
+        );
+        if (clearSequenceButton) {
+          clearSequenceButton.style.display = 'none';
+        }
+      }
+
+      // Add pendingReset variable at the top with other global variables
+      let pendingReset = null;
+
+      function toggleResetOptions() {
+        const menu = document.getElementById('reset-options-menu');
+        const isVisible = menu.style.display === 'block';
+
+        // Close other menus if they're open
+        document.getElementById('options-box').style.display = 'none';
+        document.getElementById('patterns-box').style.display = 'none';
+        document.getElementById('info-box').style.display = 'none';
+
+        if (!isVisible) {
+          // Create options based on whether there's a pattern sequence
+          const hasSequence = patternSequence.length > 0;
+          menu.innerHTML = '';
+
+          // Check if bells are already in rounds
+          const isInRounds = currentOrder.every(
+            (bell, index) => bell === index + 1
+          );
+
+          if (hasSequence) {
+            // Three options when there's a sequence
+            const options = [
+              ...(isInRounds ? [] : [{ text: 'Rounds', action: resetBells }]),
+              { text: 'Reset Patterns', action: resetPatterns },
+              { text: 'Reset Everything', action: resetEverything },
+            ];
+
+            options.forEach(option => {
+              const div = document.createElement('div');
+              div.className = 'reset-options-item';
+              div.textContent = option.text;
+              div.onclick = () => {
+                option.action();
+                menu.style.display = 'none';
+              };
+              menu.appendChild(div);
+            });
+          } else {
+            // Two options when there's no sequence
+            const options = [
+              ...(isInRounds ? [] : [{ text: 'Rounds', action: resetBells }]),
+              { text: 'Reset Everything', action: resetEverything },
+            ];
+
+            options.forEach(option => {
+              const div = document.createElement('div');
+              div.className = 'reset-options-item';
+              div.textContent = option.text;
+              div.onclick = () => {
+                option.action();
+                menu.style.display = 'none';
+              };
+              menu.appendChild(div);
+            });
+          }
+
+          menu.style.display = 'block';
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+
+      // Close reset options menu when clicking outside
+      document.addEventListener('click', function (event) {
+        const menu = document.getElementById('reset-options-menu');
+        const resetIcon = document.querySelector(
+          '.options-icon[onclick="toggleResetOptions()"]'
+        );
+
+        if (
+          menu &&
+          !menu.contains(event.target) &&
+          !resetIcon.contains(event.target)
+        ) {
+          menu.style.display = 'none';
+        }
+      });
+
+      function updatePatternSequenceDisplay() {
+        const container = document.querySelector(
+          '.pattern-sequence-selected ul'
+        );
+        container.innerHTML = '';
+        patternSequence.forEach((pattern, index) => {
+          const li = document.createElement('li');
+          li.className = index === selectedSequencePattern ? 'selected' : '';
+          li.innerHTML = `
+            <span class="pattern-name">${pattern}</span>
+            <div class="pattern-actions">
+              <button class="pattern-sequence-button" onclick="removePatternFromSequence()">Remove</button>
+              <button class="pattern-sequence-button" onclick="movePatternUp()">Up</button>
+              <button class="pattern-sequence-button" onclick="movePatternDown()">Down</button>
+            </div>
+          `;
+          container.appendChild(li);
+        });
+
+        // Update the Begin Calling This Sequence button visibility
+        const beginButton = document.getElementById('begin-sequence-button');
+        if (beginButton) {
+          beginButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
+
+        updatePatternSequenceCounter();
       }
     </script>
   </body>
