@@ -41,6 +41,10 @@
         background-color: darkred;
       }
 
+      .bell-number-button.pending {
+        background-color: darkred;
+      }
+
       .bell-container {
         display: flex;
         justify-content: center;
@@ -372,9 +376,9 @@
       /* Patterns popup styling */
       .patterns-box {
         position: fixed;
-        top: 50%;
+        top: 20px; /* Fixed distance from top */
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translateX(-50%); /* Only translate horizontally */
         background: white;
         color: black;
         border: 1px solid #ccc;
@@ -382,11 +386,12 @@
         padding: 20px;
         width: 80%;
         max-width: 600px;
-        max-height: 80vh;
+        max-height: calc(
+          100vh - 40px
+        ); /* Allow to extend down, leaving 20px margin at bottom */
         overflow-y: auto;
-        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
         z-index: 1000;
-        display: none;
+        display: none; /* Hide by default */
         flex-direction: column;
       }
 
@@ -999,6 +1004,10 @@
         border: 2px solid #003d80;
       }
 
+      .patterns-bell-button.pending {
+        background-color: darkred;
+      }
+
       /* Reset Options Dialog styling */
       .reset-options-box {
         display: none;
@@ -1429,34 +1438,19 @@
           </button>
         </div>
         <div class="patterns-bell-buttons">
-          <button
-            class="patterns-bell-button"
-            onclick="updatePatternsDisplay(5)"
-          >
+          <button class="patterns-bell-button" onclick="setBells(5)">
             5 Bells
           </button>
-          <button
-            class="patterns-bell-button"
-            onclick="updatePatternsDisplay(6)"
-          >
+          <button class="patterns-bell-button" onclick="setBells(6)">
             6 Bells
           </button>
-          <button
-            class="patterns-bell-button"
-            onclick="updatePatternsDisplay(8)"
-          >
+          <button class="patterns-bell-button" onclick="setBells(8)">
             8 Bells
           </button>
-          <button
-            class="patterns-bell-button"
-            onclick="updatePatternsDisplay(10)"
-          >
+          <button class="patterns-bell-button" onclick="setBells(10)">
             10 Bells
           </button>
-          <button
-            class="patterns-bell-button"
-            onclick="updatePatternsDisplay(12)"
-          >
+          <button class="patterns-bell-button" onclick="setBells(12)">
             12 Bells
           </button>
         </div>
@@ -1635,6 +1629,7 @@
       let currentPatternIndex = 0; // Index of current pattern in sequence
       let selectedAvailablePattern = null; // Currently selected pattern in available list
       let selectedSequencePattern = null; // Currently selected pattern in sequence list
+      let selectedPattern = null; // Clear the selected pattern
 
       // Helper function to convert bell numbers for display
       function convertBellNumberForDisplay(num) {
@@ -1748,9 +1743,66 @@
       });
 
       function setBells(count, isInitialLoad = false) {
+        // Clear pattern sequence and update UI regardless of playback state
+        patternSequence = [];
+        currentPatternIndex = 0;
+        selectedSequencePattern = null;
+        selectedPattern = null; // Clear the selected pattern
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+
+        // Clear the error message div (which contains the pattern order prompt)
+        const errorMessageDiv = document.getElementById('error-message');
+        errorMessageDiv.innerHTML = '';
+
+        // Reset the pattern dropdown to default
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
         if (isPlaying) {
           // If playback is active, queue the bell count change
           pendingBellCount = count;
+
+          // Add pending state to current bell number button
+          document.querySelectorAll('.bell-number-button').forEach(button => {
+            const buttonCount = parseInt(button.textContent);
+            if (!isNaN(buttonCount)) {
+              if (buttonCount === numBells) {
+                button.classList.remove('selected');
+                button.classList.add('pending');
+              } else if (buttonCount === count) {
+                button.classList.add('selected');
+              }
+            }
+          });
+
+          // Add pending state to current pattern dialog bell button
+          const patternsBox = document.getElementById('patterns-box');
+          if (patternsBox) {
+            // Show patterns box temporarily to ensure buttons are in DOM
+            const originalDisplay = patternsBox.style.display;
+            patternsBox.style.display = 'block';
+
+            document
+              .querySelectorAll('.patterns-bell-button')
+              .forEach(button => {
+                const buttonCount = parseInt(button.textContent);
+                if (!isNaN(buttonCount)) {
+                  if (buttonCount === numBells) {
+                    button.classList.remove('selected');
+                    button.classList.add('pending');
+                  } else if (buttonCount === count) {
+                    button.classList.add('selected');
+                  }
+                }
+              });
+
+            // Restore original display state
+            patternsBox.style.display = originalDisplay;
+          }
+
           stopPlayback();
           return;
         }
@@ -1777,6 +1829,7 @@
           if (!isNaN(buttonCount)) {
             // Only toggle if it's a bell number button
             button.classList.toggle('selected', buttonCount === count);
+            button.classList.remove('pending');
           }
         });
 
@@ -1785,8 +1838,12 @@
           const buttonCount = parseInt(button.textContent);
           if (!isNaN(buttonCount)) {
             button.classList.toggle('selected', buttonCount === count);
+            button.classList.remove('pending');
           }
         });
+
+        // Update the patterns list for the new number of bells
+        displayPatterns(count);
 
         updatePatternDropdown();
 
@@ -2755,6 +2812,8 @@
         document.querySelectorAll('.patterns-bell-button').forEach(button => {
           const buttonCount = parseInt(button.textContent);
           button.classList.toggle('selected', buttonCount === count);
+          // Remove pending state when displaying patterns
+          button.classList.remove('pending');
         });
 
         for (const [name, orders] of Object.entries(patterns)) {
