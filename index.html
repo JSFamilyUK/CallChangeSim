@@ -35,14 +35,17 @@
         background-color: #0056b3;
         border: 1px solid #003d80;
         box-sizing: border-box;
+        pointer-events: none; /* Prevent clicking when selected */
       }
 
       .bell-number-button.stopping {
         background-color: darkred;
+        pointer-events: none;
       }
 
       .bell-number-button.pending {
         background-color: darkred;
+        pointer-events: none;
       }
 
       .bell-container {
@@ -1002,10 +1005,12 @@
       .patterns-bell-button.selected {
         background-color: #0056b3;
         border: 2px solid #003d80;
+        pointer-events: none;
       }
 
       .patterns-bell-button.pending {
         background-color: darkred;
+        pointer-events: none;
       }
 
       /* Reset Options Dialog styling */
