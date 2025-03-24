@@ -25,6 +25,10 @@
         white-space: nowrap;
         flex-shrink: 0;
         transition: background-color 0.3s ease;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       .bell-number-button:hover {
@@ -441,6 +445,13 @@
         background-color: #007bff;
         color: white;
         border: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.3s ease;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       .patterns-button:hover {
@@ -595,6 +606,13 @@
         background-color: #f0f0f0f0;
         margin: 5px auto;
         padding: 0;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.3s ease;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       .lead-button:hover {
@@ -705,8 +723,15 @@
 
       .pattern-sequence-header .close-icon {
         position: absolute;
-        right: 0;
-        top: 0;
+        right: 10px;
+        top: 10px;
+        cursor: pointer;
+        font-size: 20px;
+        color: #666;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       .pattern-sequence-header .prompt {
@@ -828,8 +853,12 @@
         border: none;
         white-space: nowrap;
         flex-shrink: 0;
-        min-width: 120px; /* Set minimum width for both buttons */
-        width: 120px; /* Force same width for both buttons */
+        min-width: 120px;
+        width: 120px;
+        user-select: none; /* Prevent double-click zoom */
+        -webkit-user-select: none; /* For Safari */
+        -moz-user-select: none; /* For Firefox */
+        -ms-user-select: none; /* For IE/Edge */
       }
 
       #begin-sequence-button {
@@ -916,6 +945,10 @@
         white-space: nowrap;
         flex-shrink: 0;
         transition: background-color 0.3s ease;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       .pattern-sequence-button:hover {
@@ -959,23 +992,16 @@
       }
 
       .close-icon {
-        background: none;
-        border: none;
+        position: absolute;
+        right: 10px;
+        top: 10px;
         cursor: pointer;
-        padding: 5px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .close-icon svg {
-        width: 24px;
-        height: 24px;
-        fill: #666;
-      }
-
-      .close-icon:hover svg {
-        fill: #333;
+        font-size: 20px;
+        color: #666;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       .patterns-bell-button {
@@ -988,6 +1014,13 @@
         background-color: #007bff;
         color: white;
         border: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.3s ease;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       .patterns-bell-button:hover {
@@ -1748,6 +1781,13 @@
       });
 
       function setBells(count, isInitialLoad = false) {
+        if (isPlaying) {
+          // If playback is active, queue the bell count change
+          pendingBellCount = count;
+          stopPlayback();
+          return;
+        }
+
         // Only reset everything if this is not the initial load
         if (!isInitialLoad) {
           resetEverything();
