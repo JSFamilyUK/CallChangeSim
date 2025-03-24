@@ -725,91 +725,77 @@
       }
 
       .pattern-sequence-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 10px;
-        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 560px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 10px;
+        box-sizing: border-box;
       }
 
       .pattern-sequence-item {
-        padding: 10px;
+        width: 100%;
+        padding: 8px;
         border: 1px solid #ddd;
         border-radius: 4px;
         cursor: pointer;
-        background: white;
+        text-align: left;
+        background-color: #f9f9f9;
         transition: all 0.2s ease;
         position: relative;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        box-sizing: border-box;
+      }
+
+      .pattern-sequence-item .sequence-number {
+        margin-left: auto;
+        padding-left: 8px;
       }
 
       .pattern-sequence-item:hover {
-        background: #f5f5f5;
+        background-color: #f0f0f0;
       }
 
       .pattern-sequence-item.selected {
-        background: #e3f2fd;
+        background-color: #e3f2fd;
         border-color: #2196f3;
-      }
-
-      .pattern-sequence-item .pattern-name {
-        flex-grow: 1;
-        margin-right: 10px;
+        color: #1976d2;
       }
 
       .pattern-sequence-item .positions {
         display: flex;
-        gap: 4px;
-        flex-wrap: wrap;
-        margin-right: 30px;
+        gap: 2px;
+        margin-left: 8px;
       }
 
-      .pattern-sequence-item .positions span {
+      .pattern-sequence-item .position {
         background: #2196f3;
         color: white;
-        padding: 4px 8px;
+        padding: 3px 8px;
         border-radius: 12px;
         font-size: 14px;
-        font-weight: 500;
-        min-width: 20px;
+        font-weight: bold;
+        min-width: 24px;
         text-align: center;
         display: inline-block;
-      }
-
-      .pattern-sequence-item .remove-button {
-        position: absolute;
-        right: 5px;
-        background: #ff4444;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        width: 20px;
-        height: 20px;
-        line-height: 1;
-        font-size: 12px;
-        cursor: pointer;
-        display: none;
-      }
-
-      .pattern-sequence-item.selected .remove-button {
-        display: block;
-      }
-
-      .pattern-sequence-item.selected .position {
-        right: 30px;
       }
 
       .pattern-sequence-confirm {
         margin-top: 20px;
         text-align: center;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
       }
 
-      #begin-sequence-button {
+      #begin-sequence-button,
+      #undo-sequence-button {
         display: none;
         padding: 10px 20px;
-        background-color: #4caf50;
-        color: white;
         border: none;
         border-radius: 4px;
         cursor: pointer;
@@ -817,8 +803,22 @@
         transition: background-color 0.3s;
       }
 
+      #begin-sequence-button {
+        background-color: #4caf50;
+        color: white;
+      }
+
       #begin-sequence-button:hover {
         background-color: #45a049;
+      }
+
+      #undo-sequence-button {
+        background-color: #f44336;
+        color: white;
+      }
+
+      #undo-sequence-button:hover {
+        background-color: #da190b;
       }
 
       .pattern-sequence-container {
@@ -1432,8 +1432,11 @@
           </button>
         </div>
         <div class="patterns-controls">
-          <button class="patterns-button" onclick="openPatternSequenceDialog()">
-            Create a Call Change Sequence
+          <button
+            class="pattern-sequence-button"
+            onclick="openPatternSequenceDialog()"
+          >
+            New Call Change Sequence
           </button>
           <button
             class="patterns-button"
@@ -1515,7 +1518,7 @@
     <div class="image-wrapper">
       <br />
       <span class="center-text"
-        >v7.0 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+        >v7.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
           >contact@callchangesim.co.uk</a
         ></span
       >
@@ -1549,7 +1552,14 @@
             id="begin-sequence-button"
             onclick="confirmPatternSequence()"
           >
-            Begin Calling This Sequence
+            Start Sequence
+          </button>
+          <button
+            class="pattern-sequence-button"
+            id="undo-sequence-button"
+            onclick="undoLastPattern()"
+          >
+            Undo
           </button>
         </div>
       </div>
@@ -1720,44 +1730,17 @@
         }
       });
 
-      function setBells(count) {
-        if (isPlaying) {
-          // If playback is active, store the pending change and stop playback
-          pendingBellCount = count;
-          // Update selected state of bell number buttons immediately
-          document.querySelectorAll('.bell-number-button').forEach(button => {
-            const buttonCount = parseInt(button.textContent);
-            if (!isNaN(buttonCount)) {
-              // Only toggle if it's a bell number button
-              button.classList.toggle('selected', buttonCount === count);
-            }
-          });
-          stopPlayback();
-          return;
+      function setBells(count, isInitialLoad = false) {
+        // Only reset everything if this is not the initial load
+        if (!isInitialLoad) {
+          resetEverything();
         }
 
-        // Store the current pattern sequence if it exists
-        const currentSequence = [...patternSequence];
-        const currentIndex = currentPatternIndex;
-
-        // Apply the bell count change immediately if not playing
-        applyBellCount(count);
-
-        // Restore the pattern sequence if it exists
-        if (currentSequence.length > 0) {
-          patternSequence = currentSequence;
-          currentPatternIndex = currentIndex;
-          updatePatternSequenceCounter();
-        }
-      }
-
-      function applyBellCount(count) {
         numBells = count;
-        currentOrder = Array.from({ length: count }, (_, i) => i + 1);
-        selectedBells = [];
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
         history = [];
-        pendingSwap = null;
-        pendingBellCount = null; // Clear any pending bell count
+        updateHistory('Go!', currentOrder);
+        updateDisplay();
 
         // Set the CSS variable for number of bells
         document
@@ -1787,27 +1770,11 @@
         if (pendingPattern) {
           applyPattern(pendingPattern);
           pendingPattern = null;
-        } else {
-          // Clear or update pattern display in the error-message area
-          const errorMessageDiv = document.getElementById('error-message');
-          const dropdown = document.getElementById('pattern-dropdown');
-          if (dropdown.value !== 'Choose Desired Pattern') {
-            const matchOrder = patterns[dropdown.value]?.[numBells] || [];
-            errorMessageDiv.style.color = 'black';
-            errorMessageDiv.innerText = matchOrder.join('-');
-          } else {
-            errorMessageDiv.innerText = '';
-          }
         }
+      }
 
-        updateHistory('Go!', currentOrder);
-        updateDisplay();
-
-        // Update patterns display if the patterns window is open
-        const patternsBox = document.getElementById('patterns-box');
-        if (patternsBox.style.display === 'block') {
-          displayPatterns(count);
-        }
+      function applyBellCount(count) {
+        setBells(count, true);
       }
 
       function updatePatternDropdown() {
@@ -1994,11 +1961,6 @@
         const isCallingUp =
           callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
           callingUpLabel.style.color === '#007bff';
-
-        console.log('Calling Up Label Color:', callingUpLabel.style.color);
-        console.log('Is Calling Up:', isCallingUp);
-        console.log('First Bell:', first, 'Second Bell:', second);
-        console.log('First Index:', firstIndex, 'Second Index:', secondIndex);
 
         if (isCallingUp) {
           // When calling up, check for adjacent bells
@@ -2222,7 +2184,6 @@
               arrayBuffer
             );
           }
-          console.log('All bell sounds loaded successfully');
         } catch (error) {
           console.error('Error loading bell sounds:', error);
           // If loading fails, force offline mode
@@ -2401,19 +2362,8 @@
                   .map(convertBellNumberForDisplay)
                   .join(' ')}`;
 
-                // Update the pattern sequence counter
-                const counter = document.getElementById(
-                  'pattern-sequence-counter'
-                );
-                if (counter) {
-                  counter.textContent = `Pattern 1 of ${patternSequence.length}`;
-                } else {
-                  const newCounter = document.createElement('div');
-                  newCounter.className = 'pattern-sequence-counter';
-                  newCounter.id = 'pattern-sequence-counter';
-                  newCounter.textContent = `Pattern 1 of ${patternSequence.length}`;
-                  errorMessageDiv.appendChild(newCounter);
-                }
+                // Update the pattern sequence counter using the proper function
+                updatePatternSequenceCounter();
 
                 // Show the clear sequence button
                 const clearSequenceButton = document.getElementById(
@@ -2666,7 +2616,7 @@
 
       /*********************** Initialize Default State ************************/
       // Initialize with 6 bells by default
-      setBells(6);
+      setBells(6, true);
 
       function resetSimulator() {
         // Reset the pattern dropdown to default
@@ -2982,6 +2932,14 @@
         patternSequenceBox.style.display = 'block';
         overlay.style.display = 'block';
 
+        // Stop playback if active
+        if (isPlaying) {
+          stopPlayback();
+        }
+
+        // Reset everything including bells and patterns
+        resetEverything();
+
         // Get the currently selected bell count from the patterns dialog
         const selectedBellButton = document.querySelector(
           '.patterns-bell-button.selected'
@@ -3009,47 +2967,14 @@
           }
         }
 
-        // Display existing sequence if there is one
-        if (patternSequence.length > 0) {
-          patternSequence.forEach((patternName, index) => {
-            const displayName =
-              patternName === 'Exploding Tittums'
-                ? 'Exp. Tittums'
-                : patternName;
-            const items = document.querySelectorAll('.pattern-sequence-item');
-            items.forEach(item => {
-              if (item.textContent === displayName) {
-                item.classList.add('selected');
-
-                // Create positions container
-                const positionsContainer = document.createElement('div');
-                positionsContainer.className = 'positions';
-                item.appendChild(positionsContainer);
-
-                // Add position number
-                const position = document.createElement('span');
-                position.textContent = index + 1;
-                positionsContainer.appendChild(position);
-
-                // Add remove button
-                const removeButton = document.createElement('button');
-                removeButton.className = 'remove-button';
-                removeButton.innerHTML = '×';
-                removeButton.onclick = e => {
-                  e.stopPropagation(); // Prevent triggering the pattern selection
-                  removePatternFromSequence(patternName);
-                };
-                item.appendChild(removeButton);
-              }
-            });
-          });
-        }
-
-        // Update the Begin Calling This Sequence button visibility
+        // Hide the Start Sequence and Undo buttons since we're starting fresh
         const beginButton = document.getElementById('begin-sequence-button');
+        const undoButton = document.getElementById('undo-sequence-button');
         if (beginButton) {
-          beginButton.style.display =
-            patternSequence.length > 0 ? 'block' : 'none';
+          beginButton.style.display = 'none';
+        }
+        if (undoButton) {
+          undoButton.style.display = 'none';
         }
       }
 
@@ -3074,91 +2999,43 @@
           element.appendChild(positionsContainer);
         }
 
-        // Add new position number
+        // Add position number
         const position = document.createElement('span');
+        position.className = 'position';
         position.textContent = patternSequence.length;
         positionsContainer.appendChild(position);
 
-        const removeButton = document.createElement('button');
-        removeButton.className = 'remove-button';
-        removeButton.innerHTML = '×';
-        removeButton.onclick = e => {
-          e.stopPropagation(); // Prevent triggering the pattern selection
-          removePatternFromSequence(patternName);
-        };
-        element.appendChild(removeButton);
-
-        // Update the Begin Calling This Sequence button visibility
+        // Update the Begin Calling This Sequence and Undo buttons visibility
         const beginButton = document.getElementById('begin-sequence-button');
+        const undoButton = document.getElementById('undo-sequence-button');
         if (beginButton) {
           beginButton.style.display =
             patternSequence.length > 0 ? 'block' : 'none';
         }
+        if (undoButton) {
+          undoButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
       }
 
-      function removePatternFromSequence(patternName) {
-        // Store the original sequence length before removal
-        const originalLength = patternSequence.length;
+      function undoLastPattern() {
+        if (patternSequence.length === 0) return;
 
-        // Remove all instances of the pattern from the sequence
-        patternSequence = patternSequence.filter(
-          pattern => pattern !== patternName
-        );
+        // Remove the last pattern from the sequence
+        patternSequence.pop();
 
-        // Calculate how many instances were removed
-        const removedCount = originalLength - patternSequence.length;
+        // Update all pattern positions to reflect the current sequence state
+        updatePatternPositions();
 
-        // Clear all UI elements first
-        document.querySelectorAll('.pattern-sequence-item').forEach(item => {
-          item.classList.remove('selected');
-          const positions = item.querySelector('.positions');
-          if (positions) {
-            positions.remove();
-          }
-          const removeButton = item.querySelector('.remove-button');
-          if (removeButton) {
-            removeButton.remove();
-          }
-        });
-
-        // Then update UI for remaining patterns
-        patternSequence.forEach((remainingPattern, index) => {
-          const displayName =
-            remainingPattern === 'Exploding Tittums'
-              ? 'Exp. Tittums'
-              : remainingPattern;
-          const items = document.querySelectorAll('.pattern-sequence-item');
-          items.forEach(item => {
-            if (item.textContent === displayName) {
-              item.classList.add('selected');
-
-              // Create positions container
-              const positionsContainer = document.createElement('div');
-              positionsContainer.className = 'positions';
-              item.appendChild(positionsContainer);
-
-              // Add position number
-              const position = document.createElement('span');
-              position.textContent = index + 1;
-              positionsContainer.appendChild(position);
-
-              // Add remove button
-              const removeButton = document.createElement('button');
-              removeButton.className = 'remove-button';
-              removeButton.innerHTML = '×';
-              removeButton.onclick = e => {
-                e.stopPropagation(); // Prevent triggering the pattern selection
-                removePatternFromSequence(remainingPattern);
-              };
-              item.appendChild(removeButton);
-            }
-          });
-        });
-
-        // Update the Begin Calling This Sequence button visibility
+        // Update button visibility
         const beginButton = document.getElementById('begin-sequence-button');
+        const undoButton = document.getElementById('undo-sequence-button');
         if (beginButton) {
           beginButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
+        if (undoButton) {
+          undoButton.style.display =
             patternSequence.length > 0 ? 'block' : 'none';
         }
       }
@@ -3167,13 +3044,9 @@
         // First, clear all selections and position numbers
         document.querySelectorAll('.pattern-sequence-item').forEach(item => {
           item.classList.remove('selected');
-          const positions = item.querySelector('.positions');
-          if (positions) {
-            positions.remove();
-          }
-          const removeButton = item.querySelector('.remove-button');
-          if (removeButton) {
-            removeButton.remove();
+          const positionsContainer = item.querySelector('.positions');
+          if (positionsContainer) {
+            positionsContainer.remove();
           }
         });
 
@@ -3183,7 +3056,9 @@
             patternName === 'Exploding Tittums' ? 'Exp. Tittums' : patternName;
           const items = document.querySelectorAll('.pattern-sequence-item');
           items.forEach(item => {
-            if (item.textContent === displayName) {
+            // Get the base text content without any position numbers
+            const baseText = item.textContent.replace(/[0-9]/g, '').trim();
+            if (baseText === displayName) {
               item.classList.add('selected');
 
               // Create or update positions container
@@ -3196,17 +3071,9 @@
 
               // Add position number
               const position = document.createElement('span');
+              position.className = 'position';
               position.textContent = index + 1;
               positionsContainer.appendChild(position);
-
-              const removeButton = document.createElement('button');
-              removeButton.className = 'remove-button';
-              removeButton.innerHTML = '×';
-              removeButton.onclick = e => {
-                e.stopPropagation(); // Prevent triggering the pattern selection
-                removePatternFromSequence(patternName);
-              };
-              item.appendChild(removeButton);
             }
           });
         });
@@ -3280,27 +3147,26 @@
 
         if (patternSequence.length > 1) {
           if (!existingCounter) {
-            // Only create new counter if it doesn't exist
             const counter = document.createElement('div');
-            counter.className = 'pattern-sequence-counter';
             counter.id = 'pattern-sequence-counter';
-            counter.innerHTML = `<a onclick="showSequencePopup()">Pattern ${
+            counter.innerHTML = `Pattern <span id="current-pattern-number">${
               currentPatternIndex + 1
-            } of ${patternSequence.length}</a>`;
+            }</span> of ${patternSequence.length}`;
+            counter.style.marginTop = '10px';
+            counter.style.fontSize = '0.9em';
+            counter.style.color = '#666';
+            counter.style.cursor = 'pointer';
+            counter.onclick = showSequencePopup;
             errorMessageDiv.appendChild(counter);
           } else {
-            // Update existing counter
-            existingCounter.innerHTML = `<a onclick="showSequencePopup()">Pattern ${
+            existingCounter.innerHTML = `Pattern <span id="current-pattern-number">${
               currentPatternIndex + 1
-            } of ${patternSequence.length}</a>`;
+            }</span> of ${patternSequence.length}`;
           }
-          // Show the clear sequence button
-          clearSequenceButton.style.display = 'inline-block';
-        } else if (existingCounter) {
-          // Remove counter if sequence is empty or has only one pattern
-          existingCounter.remove();
-          // Hide the clear sequence button
-          clearSequenceButton.style.display = 'none';
+        } else {
+          if (existingCounter) {
+            existingCounter.remove();
+          }
         }
       }
 
@@ -3352,12 +3218,6 @@
           counter.remove();
         }
 
-        // Hide the clear sequence button
-        const clearSequenceButton = document.getElementById(
-          'clear-sequence-button'
-        );
-        clearSequenceButton.style.display = 'none';
-
         // Reset the pattern dropdown
         const dropdown = document.getElementById('pattern-dropdown');
         dropdown.value = 'Choose Desired Pattern';
@@ -3387,11 +3247,10 @@
         const hasSequence = patternSequence.length > 0;
 
         if (hasSequence) {
-          // Four options when there's a sequence
+          // Three options when there's a sequence
           const options = [
             { text: 'Reset Bells', action: resetBells },
             { text: 'Reset Patterns', action: resetPatterns },
-            { text: 'Reset Both', action: resetBoth },
             { text: 'Reset Everything', action: resetEverything },
           ];
 
@@ -3401,7 +3260,7 @@
             button.textContent = option.text;
             button.onclick = () => {
               option.action();
-              closeResetOptionsDialog();
+              closeResetOptions();
             };
             resetOptionsList.appendChild(button);
           });
@@ -3418,7 +3277,7 @@
             button.textContent = option.text;
             button.onclick = () => {
               option.action();
-              closeResetOptionsDialog();
+              closeResetOptions();
             };
             resetOptionsList.appendChild(button);
           });
@@ -3521,18 +3380,6 @@
             clearSequenceButton.style.display = 'inline-block';
           }
         }
-      }
-
-      function resetBoth() {
-        if (isPlaying) {
-          // If playback is active, stop it and apply the reset after
-          stopPlayback();
-          pendingReset = 'both';
-          return;
-        }
-
-        resetBells();
-        resetPatterns();
       }
 
       function resetEverything() {
@@ -3692,64 +3539,17 @@
         updatePatternSequenceCounter();
       }
 
-      function showPatternSequenceBuilder() {
-        const dialog = document.getElementById('pattern-sequence-builder');
-        dialog.style.display = 'block';
-        document.getElementById('pattern-sequence-overlay').style.display =
-          'block';
+      // Initialize the simulator with 6 bells
+      setBells(6, true);
 
-        // Clear and rebuild the pattern grid to ensure clean state
-        const patternGrid = document.getElementById('pattern-sequence-grid');
-        patternGrid.innerHTML = '';
+      // Initialize pattern dialog
+      function initializePatternDialog() {
+        // ... existing code ...
+      }
 
-        // Add all patterns to the grid
-        patterns.forEach(pattern => {
-          const item = document.createElement('div');
-          item.className = 'pattern-sequence-item';
-          item.textContent =
-            pattern.name === 'Exploding Tittums'
-              ? 'Exp. Tittums'
-              : pattern.name;
-          item.onclick = () => togglePatternSelection(pattern.name, item);
-          patternGrid.appendChild(item);
-        });
-
-        // Display existing sequence if there is one
-        if (patternSequence.length > 0) {
-          // Update the UI to show the existing sequence
-          patternSequence.forEach((patternName, index) => {
-            const displayName =
-              patternName === 'Exploding Tittums'
-                ? 'Exp. Tittums'
-                : patternName;
-            const items = document.querySelectorAll('.pattern-sequence-item');
-            items.forEach(item => {
-              if (item.textContent === displayName) {
-                item.classList.add('selected');
-
-                // Create positions container
-                const positionsContainer = document.createElement('div');
-                positionsContainer.className = 'positions';
-                item.appendChild(positionsContainer);
-
-                // Add position number
-                const position = document.createElement('span');
-                position.textContent = index + 1;
-                positionsContainer.appendChild(position);
-
-                // Add remove button
-                const removeButton = document.createElement('button');
-                removeButton.className = 'remove-button';
-                removeButton.innerHTML = '×';
-                removeButton.onclick = e => {
-                  e.stopPropagation(); // Prevent triggering the pattern selection
-                  removePatternFromSequence(patternName);
-                };
-                item.appendChild(removeButton);
-              }
-            });
-          });
-        }
+      function handlePatternBellButtonClick(count) {
+        setBells(count);
+        closePatternDialog();
       }
     </script>
   </body>
