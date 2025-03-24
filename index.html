@@ -1432,19 +1432,8 @@
           </button>
         </div>
         <div class="patterns-controls">
-          <button
-            class="pattern-sequence-button"
-            onclick="openPatternSequenceDialog()"
-          >
+          <button class="patterns-button" onclick="openPatternSequenceDialog()">
             New Call Change Sequence
-          </button>
-          <button
-            class="patterns-button"
-            id="clear-sequence-button"
-            onclick="clearPatternSequenceFromDialog()"
-            style="display: none"
-          >
-            Clear Sequence
           </button>
         </div>
       </div>
@@ -2364,14 +2353,6 @@
 
                 // Update the pattern sequence counter using the proper function
                 updatePatternSequenceCounter();
-
-                // Show the clear sequence button
-                const clearSequenceButton = document.getElementById(
-                  'clear-sequence-button'
-                );
-                if (clearSequenceButton) {
-                  clearSequenceButton.style.display = 'inline-block';
-                }
               }
               break;
             case 'everything':
@@ -2406,14 +2387,6 @@
               );
               if (counter) {
                 counter.remove();
-              }
-
-              // Hide the clear sequence button
-              const clearSequenceButton = document.getElementById(
-                'clear-sequence-button'
-              );
-              if (clearSequenceButton) {
-                clearSequenceButton.style.display = 'none';
               }
               break;
           }
@@ -3419,14 +3392,6 @@
         if (counter) {
           counter.remove();
         }
-
-        // Hide the clear sequence button
-        const clearSequenceButton = document.getElementById(
-          'clear-sequence-button'
-        );
-        if (clearSequenceButton) {
-          clearSequenceButton.style.display = 'none';
-        }
       }
 
       // Add pendingReset variable at the top with other global variables
@@ -3455,7 +3420,7 @@
             // Three options when there's a sequence
             const options = [
               ...(isInRounds ? [] : [{ text: 'Rounds', action: resetBells }]),
-              { text: 'Reset Patterns', action: resetPatterns },
+              { text: 'Restart Pattern', action: resetPatterns },
               { text: 'Reset Everything', action: resetEverything },
             ];
 
