@@ -2650,6 +2650,9 @@
             window.webkitAudioContext)();
         }
 
+        // Clear any pending bell count changes since we're starting with current state
+        pendingBellCount = null;
+
         pendingStop = false;
         isPlaying = true;
 
