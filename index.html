@@ -1443,19 +1443,34 @@
           </button>
         </div>
         <div class="patterns-bell-buttons">
-          <button class="patterns-bell-button" onclick="setBells(5)">
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(5)"
+          >
             5 Bells
           </button>
-          <button class="patterns-bell-button" onclick="setBells(6)">
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(6)"
+          >
             6 Bells
           </button>
-          <button class="patterns-bell-button" onclick="setBells(8)">
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(8)"
+          >
             8 Bells
           </button>
-          <button class="patterns-bell-button" onclick="setBells(10)">
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(10)"
+          >
             10 Bells
           </button>
-          <button class="patterns-bell-button" onclick="setBells(12)">
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(12)"
+          >
             12 Bells
           </button>
         </div>
@@ -1636,6 +1651,7 @@
       let selectedAvailablePattern = null; // Currently selected pattern in available list
       let selectedSequencePattern = null; // Currently selected pattern in sequence list
       let selectedPattern = null; // Clear the selected pattern
+      let pendingPatternsBoxOpen = false; // Add this with other global variables
 
       // Helper function to convert bell numbers for display
       function convertBellNumberForDisplay(num) {
@@ -2588,30 +2604,7 @@
             // Sequence is complete
             if (pendingStop) {
               // If stop was requested, stop playback now
-              isPlaying = false;
-              pendingStop = false;
-              // Remove stopping class when playback stops
-              const standButton = document.querySelector(
-                'button.bell-number-button[onclick="stopPlayback()"]'
-              );
-              standButton.classList.remove('stopping');
-              standButton.classList.remove('selected'); // Also remove selected class
-
-              // Clear selections and pending changes without applying them
-              selectedBells = [];
-              pendingSwap = null;
-              pendingLead = null;
-              updateSelectionDisplay();
-              clearHighlight();
-              // Remove selected state from lead button
-              document
-                .querySelector('.lead-button')
-                .classList.remove('selected');
-
-              // If there's a pending bell count change, apply it now
-              if (pendingBellCount !== null) {
-                applyBellCount(pendingBellCount);
-              }
+              handlePlaybackComplete();
               return;
             }
 
@@ -2810,18 +2803,34 @@
       function togglePatternsBox() {
         const patternsBox = document.getElementById('patterns-box');
         const overlay = document.getElementById('overlay');
+
         if (
           patternsBox.style.display === 'none' ||
           patternsBox.style.display === ''
         ) {
+          // If playback is active, set pending flag and trigger stop
+          if (isPlaying) {
+            pendingPatternsBoxOpen = true;
+            pendingStop = true;
+            const standButton = document.querySelector(
+              'button.bell-number-button[onclick="stopPlayback()"]'
+            );
+            standButton.classList.add('stopping');
+            return;
+          }
+
+          // Reset everything before showing patterns box
+          resetEverything();
+
           patternsBox.style.display = 'block';
           overlay.style.display = 'block';
-          displayPatterns(numBells); // Only update patterns when opening
+          displayPatterns(numBells);
         } else {
           patternsBox.style.display = 'none';
           overlay.style.display = 'none';
           // Reset scroll position when closing
           patternsBox.scrollTop = 0;
+          pendingPatternsBoxOpen = false;
         }
       }
 
@@ -3641,6 +3650,49 @@
       function handlePatternBellButtonClick(count) {
         setBells(count);
         closePatternDialog();
+      }
+
+      function filterPatternsByBells(count) {
+        // Update selected state of pattern dialog bell buttons
+        document.querySelectorAll('.patterns-bell-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          if (!isNaN(buttonCount)) {
+            button.classList.toggle('selected', buttonCount === count);
+          }
+        });
+
+        // Update displayed patterns for selected bell count
+        displayPatterns(count);
+      }
+
+      // Add this to the playback completion handler in playSequence
+      function handlePlaybackComplete() {
+        isPlaying = false;
+        pendingStop = false;
+        const standButton = document.querySelector(
+          'button.bell-number-button[onclick="stopPlayback()"]'
+        );
+        standButton.classList.remove('stopping');
+        standButton.classList.remove('selected');
+
+        // Clear selections and pending changes
+        selectedBells = [];
+        pendingSwap = null;
+        pendingLead = null;
+        updateSelectionDisplay();
+        clearHighlight();
+        document.querySelector('.lead-button').classList.remove('selected');
+
+        // Handle pending bell count change
+        if (pendingBellCount !== null) {
+          applyBellCount(pendingBellCount);
+        }
+
+        // Handle pending patterns box open
+        if (pendingPatternsBoxOpen) {
+          pendingPatternsBoxOpen = false;
+          togglePatternsBox();
+        }
       }
     </script>
   </body>
