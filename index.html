@@ -1253,6 +1253,49 @@
         color: #666;
         line-height: 1;
       }
+
+      /* Add styles for pending notification */
+      .pending-notification {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 1000;
+      }
+
+      .pending-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .pending-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .pending-text {
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -1620,6 +1663,14 @@
       <h3>Current Pattern Sequence</h3>
       <h5>The Active Pattern is Green</h5>
       <ul id="sequence-list"></ul>
+    </div>
+
+    <!-- Add pending notification overlay -->
+    <div class="pending-notification" id="pending-stand-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Standing the bells...</div>
+      </div>
     </div>
 
     <script>
@@ -2513,7 +2564,7 @@
             'button.bell-number-button[onclick="stopPlayback()"]'
           );
           standButton.classList.remove('stopping');
-          standButton.classList.remove('selected'); // Also remove selected class
+          standButton.classList.remove('selected');
 
           // Clear selections and pendingSwap/pendingLead without applying them
           selectedBells = [];
@@ -2551,7 +2602,7 @@
               'button.bell-number-button[onclick="stopPlayback()"]'
             );
             standButton.classList.remove('stopping');
-            standButton.classList.remove('selected'); // Also remove selected class
+            standButton.classList.remove('selected');
             return;
           }
 
@@ -2608,7 +2659,7 @@
               return;
             }
 
-            // Pause for one bell duration only if "Open Handstroke" is enabled
+            // Always add a handstroke gap if enabled, regardless of sequence
             if (openHandstrokeEnabled) {
               playbackTimeout = setTimeout(() => {
                 // Only apply pending changes if we're not stopping
@@ -2621,6 +2672,7 @@
                     pendingLead = null;
                   }
                 }
+                // Start next sequence after the gap
                 playSequence();
               }, duration * 1000);
             } else {
@@ -2806,6 +2858,9 @@
       function togglePatternsBox() {
         const patternsBox = document.getElementById('patterns-box');
         const overlay = document.getElementById('overlay');
+        const pendingNotification = document.getElementById(
+          'pending-stand-notification'
+        );
 
         if (
           patternsBox.style.display === 'none' ||
@@ -2819,6 +2874,9 @@
               'button.bell-number-button[onclick="stopPlayback()"]'
             );
             standButton.classList.add('stopping');
+
+            // Show the pending notification
+            pendingNotification.style.display = 'block';
             return;
           }
 
@@ -2834,6 +2892,8 @@
           // Reset scroll position when closing
           patternsBox.scrollTop = 0;
           pendingPatternsBoxOpen = false;
+          // Hide the pending notification
+          pendingNotification.style.display = 'none';
         }
       }
 
@@ -3725,6 +3785,9 @@
         // Handle pending patterns box open
         if (pendingPatternsBoxOpen) {
           pendingPatternsBoxOpen = false;
+          // Hide the pending notification before opening the patterns box
+          document.getElementById('pending-stand-notification').style.display =
+            'none';
           togglePatternsBox();
         }
       }
