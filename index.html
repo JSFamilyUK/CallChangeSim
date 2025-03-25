@@ -3203,8 +3203,8 @@
 
           // If the selected bell count is different from current, update it first
           if (selectedBellCount !== numBells) {
-            // Store the first pattern to apply after the bell count change
-            const firstPattern = patternSequence[0];
+            // Store the pattern sequence before updating bell count
+            const storedSequence = [...patternSequence];
 
             // Update the main simulator's bell number buttons
             document.querySelectorAll('.bell-number-button').forEach(button => {
@@ -3220,18 +3220,49 @@
             // Apply the bell count change and wait for it to complete
             setBells(selectedBellCount);
 
-            // Wait for the bell count change to complete before applying the pattern
+            // Wait for the bell count change to complete before applying the pattern sequence
             setTimeout(() => {
+              // Restore the pattern sequence
+              patternSequence = storedSequence;
               currentPatternIndex = 0;
-              applyPattern(firstPattern);
+
+              // Apply first pattern and update displays
+              applyPattern(patternSequence[0]);
+
+              // Update the error message with the pattern prompt
+              const errorMessageDiv = document.getElementById('error-message');
+              const matchOrder =
+                patterns[patternSequence[0]]?.[selectedBellCount] || [];
+              const displayName =
+                patternSequence[0] === 'Exploding Tittums'
+                  ? 'Exp. Tittums'
+                  : patternSequence[0];
+              errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+                .map(convertBellNumberForDisplay)
+                .join(' ')}`;
+
+              // Update the pattern sequence counter
               updatePatternSequenceCounter();
               closePatternSequenceDialog();
               closePatternsDialog();
             }, 200);
           } else {
-            // If no bell count change needed, apply pattern immediately
+            // If no bell count change needed, apply pattern sequence immediately
             currentPatternIndex = 0;
             applyPattern(patternSequence[0]);
+
+            // Update the error message with the pattern prompt
+            const errorMessageDiv = document.getElementById('error-message');
+            const matchOrder = patterns[patternSequence[0]]?.[numBells] || [];
+            const displayName =
+              patternSequence[0] === 'Exploding Tittums'
+                ? 'Exp. Tittums'
+                : patternSequence[0];
+            errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+              .map(convertBellNumberForDisplay)
+              .join(' ')}`;
+
+            // Update the pattern sequence counter
             updatePatternSequenceCounter();
             closePatternSequenceDialog();
             closePatternsDialog();
