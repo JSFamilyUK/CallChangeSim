@@ -1602,7 +1602,8 @@
 
     <div class="sequence-popup-overlay"></div>
     <div class="sequence-popup">
-      <h3>Upcoming Changes</h3>
+      <h3>Current Pattern Sequence</h3>
+      <h5>The Active Pattern is Green</h5>
       <ul id="sequence-list"></ul>
     </div>
 
@@ -2659,6 +2660,21 @@
         pendingStop = false;
         isPlaying = true;
 
+        // If there's a pattern sequence, ensure the counter and prompt are displayed
+        if (patternSequence.length > 0) {
+          const errorMessageDiv = document.getElementById('error-message');
+          const matchOrder =
+            patterns[patternSequence[currentPatternIndex]]?.[numBells] || [];
+          const displayName =
+            patternSequence[currentPatternIndex] === 'Exploding Tittums'
+              ? 'Exp. Tittums'
+              : patternSequence[currentPatternIndex];
+          errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+            .map(convertBellNumberForDisplay)
+            .join(' ')}`;
+          updatePatternSequenceCounter();
+        }
+
         // Ensure the AudioContext is in a running state before playing
         audioContext
           .resume()
@@ -3004,13 +3020,19 @@
         patternSequenceBox.style.display = 'block';
         overlay.style.display = 'block';
 
-        // Stop playback if active
+        // If playback is active, set pendingStop to let current sequence complete
         if (isPlaying) {
-          stopPlayback();
+          pendingStop = true;
+          // Add stopping class to Stand button
+          const standButton = document.querySelector(
+            'button.bell-number-button[onclick="stopPlayback()"]'
+          );
+          standButton.classList.add('stopping');
         }
 
-        // Reset everything including bells and patterns
-        resetEverything();
+        // Clear any existing pattern sequence
+        patternSequence = [];
+        currentPatternIndex = 0;
 
         // Get the currently selected bell count from the patterns dialog
         const selectedBellButton = document.querySelector(
@@ -3441,6 +3463,11 @@
             newCounter.className = 'pattern-sequence-counter';
             newCounter.id = 'pattern-sequence-counter';
             newCounter.textContent = `Pattern 1 of ${patternSequence.length}`;
+            newCounter.style.marginTop = '10px';
+            newCounter.style.fontSize = '0.9em';
+            newCounter.style.color = '#666';
+            newCounter.style.cursor = 'pointer';
+            newCounter.onclick = showSequencePopup;
             errorMessageDiv.appendChild(newCounter);
           }
 
