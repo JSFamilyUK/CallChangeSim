@@ -3623,9 +3623,15 @@
         if (isPlaying) {
           // If playback is active, queue the reset without stopping playback
           pendingReset = 'everything';
-          const notification = (document.getElementById(
+          const notification = document.getElementById(
             'pending-full-reset-notification'
-          ).style.display = 'flex');
+          );
+          notification.style.display = 'flex';
+          // Add stopping class to Stand button
+          const standButton = document.querySelector(
+            'button.bell-number-button[onclick="stopPlayback()"]'
+          );
+          standButton.classList.add('stopping');
           return;
         }
 
