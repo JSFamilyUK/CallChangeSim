@@ -1667,7 +1667,13 @@
     <div class="pending-notification" id="pending-stand-notification">
       <div class="pending-content">
         <div class="pending-spinner"></div>
-        <div class="pending-text">Standing the bells...</div>
+        <div class="pending-text">Standing the Bells...</div>
+      </div>
+    </div>
+    <div class="pending-notification" id="pending-pattern-restart-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Restarting the Pattern...</div>
       </div>
     </div>
 
@@ -2516,6 +2522,11 @@
 
                 // Update the pattern sequence counter using the proper function
                 updatePatternSequenceCounter();
+
+                // Hide the pending pattern restart notification
+                document.getElementById(
+                  'pending-pattern-restart-notification'
+                ).style.display = 'none';
               }
               break;
             case 'everything':
@@ -3502,9 +3513,12 @@
       }
 
       function resetPatterns() {
+        // If playback is active, queue the reset without stopping playback
         if (isPlaying) {
-          // If playback is active, queue the reset without stopping playback
           pendingReset = 'patterns';
+          const notification = (document.getElementById(
+            'pending-pattern-restart-notification'
+          ).style.display = 'flex');
           return;
         }
 
