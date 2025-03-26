@@ -1660,8 +1660,8 @@
 
     <div class="sequence-popup-overlay"></div>
     <div class="sequence-popup">
-      <h3>Current Pattern Sequence</h3>
-      <h5>The Active Pattern is Green</h5>
+      <h3>Custom Call Change Sequence</h3>
+      <h5>The Target Pattern Shows<br />as Green</h5>
       <ul id="sequence-list"></ul>
     </div>
 
@@ -3123,8 +3123,7 @@
           if (orders[selectedBellCount]) {
             const div = document.createElement('div');
             div.className = 'pattern-sequence-item';
-            div.textContent =
-              name === 'Exploding Tittums' ? 'Exp. Tittums' : name;
+            div.textContent = name;
 
             // Add click handler for pattern selection
             div.onclick = () => togglePatternSelection(name, div);
@@ -3377,8 +3376,7 @@
         patternSequence.forEach((pattern, index) => {
           const li = document.createElement('li');
           li.setAttribute('data-number', (index + 1).toString());
-          li.textContent =
-            pattern === 'Exploding Tittums' ? 'Exp. Tittums' : pattern;
+          li.textContent = pattern; // Use the full pattern name
           if (index === currentPatternIndex) {
             li.classList.add('current');
           }
