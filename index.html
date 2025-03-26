@@ -1591,7 +1591,7 @@
     <div class="image-wrapper">
       <br />
       <span class="center-text"
-        >v7.2.3 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+        >v7.2.4 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
           >contact@callchangesim.co.uk</a
         ></span
       >
@@ -3254,7 +3254,8 @@
           items.forEach(item => {
             // Get the base text content without any position numbers
             const baseText = item.textContent.replace(/[0-9]/g, '').trim();
-            if (baseText === displayName) {
+            // Match against both the full name and display name
+            if (baseText === patternName || baseText === displayName) {
               item.classList.add('selected');
 
               // Create or update positions container
