@@ -1591,7 +1591,7 @@
     <div class="image-wrapper">
       <br />
       <span class="center-text"
-        >v7.2.2 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+        >v7.2.3 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
           >contact@callchangesim.co.uk</a
         ></span
       >
@@ -1674,6 +1674,12 @@
       <div class="pending-content">
         <div class="pending-spinner"></div>
         <div class="pending-text">Restarting the Pattern...</div>
+      </div>
+    </div>
+    <div class="pending-notification" id="pending-rounds-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Rounds!</div>
       </div>
     </div>
 
@@ -2471,6 +2477,10 @@
               selectedBells = [];
               updateDisplay();
               updateHistory('Go!', currentOrder);
+              // Hide the pending pattern rounds notification
+              document.getElementById(
+                'pending-rounds-notification'
+              ).style.display = 'none';
               break;
             case 'patterns':
               // Reset to first pattern in sequence without clearing the sequence
@@ -2562,6 +2572,10 @@
               if (counter) {
                 counter.remove();
               }
+              // Hide the pending pattern rounds notification
+              document.getElementById(
+                'pending-rounds-notification'
+              ).style.display = 'none';
               break;
           }
           pendingReset = null;
@@ -3502,6 +3516,9 @@
         if (isPlaying) {
           // If playback is active, queue the reset without stopping playback
           pendingReset = 'bells';
+          const notification = (document.getElementById(
+            'pending-rounds-notification'
+          ).style.display = 'flex');
           return;
         }
 
@@ -3598,6 +3615,9 @@
         if (isPlaying) {
           // If playback is active, queue the reset without stopping playback
           pendingReset = 'everything';
+          const notification = (document.getElementById(
+            'pending-rounds-notification'
+          ).style.display = 'flex');
           return;
         }
 
