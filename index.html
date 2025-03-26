@@ -389,7 +389,9 @@
         padding: 20px;
         width: 80%;
         max-width: 600px;
-        max-height: 90%; /* Changed from 80vh to 80% */
+        max-height: calc(
+          80vh
+        ); /* Allow to extend down, leaving 100px margin at bottom */
         overflow-y: auto;
         z-index: 1000;
         display: none; /* Hide by default */
@@ -424,7 +426,6 @@
 
       .patterns-container {
         margin-top: 20px;
-        max-height: 70%;
         text-align: left;
         flex-grow: 1;
       }
