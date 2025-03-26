@@ -1682,6 +1682,12 @@
         <div class="pending-text">Rounds!</div>
       </div>
     </div>
+    <div class="pending-notification" id="pending-full-reset-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Resetting...</div>
+      </div>
+    </div>
 
     <script>
       // Splash screen handling
@@ -2574,7 +2580,7 @@
               }
               // Hide the pending pattern rounds notification
               document.getElementById(
-                'pending-rounds-notification'
+                'pending-full-reset-notification'
               ).style.display = 'none';
               break;
           }
@@ -3616,7 +3622,7 @@
           // If playback is active, queue the reset without stopping playback
           pendingReset = 'everything';
           const notification = (document.getElementById(
-            'pending-rounds-notification'
+            'pending-full-reset-notification'
           ).style.display = 'flex');
           return;
         }
