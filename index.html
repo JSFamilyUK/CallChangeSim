@@ -1379,7 +1379,17 @@
     <select id="pattern-dropdown" onchange="updatePatternHighlighting()">
       <option value="Choose Desired Pattern">Choose Desired Pattern</option>
     </select>
-    <button class="bell-number-button" onclick="startPlayback()">Go</button>
+    <button class="bell-number-button" id="go-button" onclick="startPlayback()">
+      Go
+    </button>
+    <button
+      class="bell-number-button"
+      id="rounds-button"
+      onclick="resetBells()"
+      style="display: none"
+    >
+      Rounds
+    </button>
     <button class="bell-number-button" onclick="stopPlayback()">Stand</button>
     <div class="selection-area-container">
       <h2 style="text-align: center; font-weight: normal">
@@ -1980,6 +1990,21 @@
           .join('');
 
         updatePattern();
+
+        // Update Go/Rounds button visibility based on current order
+        const goButton = document.getElementById('go-button');
+        const roundsButton = document.getElementById('rounds-button');
+        const isInRounds = currentOrder.every(
+          (bell, index) => bell === index + 1
+        );
+
+        if (isInRounds) {
+          goButton.style.display = 'inline-block';
+          roundsButton.style.display = 'none';
+        } else {
+          goButton.style.display = 'none';
+          roundsButton.style.display = 'inline-block';
+        }
       }
 
       function updatePattern() {
@@ -3476,37 +3501,35 @@
         if (hasSequence) {
           // Three options when there's a sequence
           const options = [
-            { text: 'Reset Bells', action: resetBells },
-            { text: 'Reset Patterns', action: resetPatterns },
+            { text: 'Restart Pattern', action: resetPatterns },
             { text: 'Reset Everything', action: resetEverything },
           ];
 
           options.forEach(option => {
-            const button = document.createElement('button');
-            button.className = 'pattern-sequence-button';
-            button.textContent = option.text;
-            button.onclick = () => {
+            const div = document.createElement('div');
+            div.className = 'reset-options-item';
+            div.textContent = option.text;
+            div.onclick = () => {
               option.action();
-              closeResetOptions();
+              menu.style.display = 'none';
             };
-            resetOptionsList.appendChild(button);
+            resetOptionsList.appendChild(div);
           });
         } else {
           // Two options when there's no sequence
           const options = [
-            { text: 'Reset Bells', action: resetBells },
             { text: 'Reset Everything', action: resetEverything },
           ];
 
           options.forEach(option => {
-            const button = document.createElement('button');
-            button.className = 'pattern-sequence-button';
-            button.textContent = option.text;
-            button.onclick = () => {
+            const div = document.createElement('div');
+            div.className = 'reset-options-item';
+            div.textContent = option.text;
+            div.onclick = () => {
               option.action();
-              closeResetOptions();
+              menu.style.display = 'none';
             };
-            resetOptionsList.appendChild(button);
+            resetOptionsList.appendChild(div);
           });
         }
 
@@ -3693,7 +3716,6 @@
           if (hasSequence) {
             // Three options when there's a sequence
             const options = [
-              ...(isInRounds ? [] : [{ text: 'Rounds', action: resetBells }]),
               { text: 'Restart Pattern', action: resetPatterns },
               { text: 'Reset Everything', action: resetEverything },
             ];
@@ -3711,7 +3733,6 @@
           } else {
             // Two options when there's no sequence
             const options = [
-              ...(isInRounds ? [] : [{ text: 'Rounds', action: resetBells }]),
               { text: 'Reset Everything', action: resetEverything },
             ];
 
