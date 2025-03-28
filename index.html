@@ -32,8 +32,8 @@
       }
 
       .bell-number-button.selected {
-        background-color: #0056b3;
-        border: 1px solid #003d80;
+        background-color: #1f8126;
+        border: 1px solid #1f8126;
         box-sizing: border-box;
         pointer-events: none; /* Prevent clicking when selected */
       }
@@ -182,8 +182,9 @@
       #pattern-dropdown {
         font-size: 14px; /* Larger text */
         font-weight: bold;
-        padding: 8px 12px; /* More padding */
+        padding: 5px 8px; /* More padding */
         margin: 5px; /* Space between buttons */
+        width: 200px;
         border-radius: 8px; /* Rounded corners */
         cursor: pointer;
         background-color: #007bff;
@@ -1001,8 +1002,8 @@
       }
 
       .patterns-bell-button.selected {
-        background-color: #0056b3;
-        border: 2px solid #003d80;
+        background-color: #1f8126;
+        border: 1px solid #1f8126;
         pointer-events: none;
       }
 
@@ -1379,9 +1380,6 @@
     <select id="pattern-dropdown" onchange="updatePatternHighlighting()">
       <option value="Choose Desired Pattern">Choose Desired Pattern</option>
     </select>
-    <button class="bell-number-button" id="go-button" onclick="startPlayback()">
-      Go
-    </button>
     <button
       class="bell-number-button"
       id="rounds-button"
@@ -1389,6 +1387,9 @@
       style="display: none"
     >
       Rounds
+    </button>
+    <button class="bell-number-button" id="go-button" onclick="startPlayback()">
+      Go
     </button>
     <button class="bell-number-button" onclick="stopPlayback()">Stand</button>
     <div class="selection-area-container">
@@ -1601,7 +1602,7 @@
     <div class="image-wrapper">
       <br />
       <span class="center-text"
-        >v7.3 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+        >v7.3.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
           >contact@callchangesim.co.uk</a
         ></span
       >
@@ -1877,6 +1878,10 @@
             }
           });
 
+          // Show the pending stand notification
+          document.getElementById('pending-stand-notification').style.display =
+            'flex';
+
           // Add pending state to current pattern dialog bell button
           const patternsBox = document.getElementById('patterns-box');
           if (patternsBox) {
@@ -1991,20 +1996,8 @@
 
         updatePattern();
 
-        // Update Go/Rounds button visibility based on current order
-        const goButton = document.getElementById('go-button');
-        const roundsButton = document.getElementById('rounds-button');
-        const isInRounds = currentOrder.every(
-          (bell, index) => bell === index + 1
-        );
-
-        if (isInRounds) {
-          goButton.style.display = 'inline-block';
-          roundsButton.style.display = 'none';
-        } else {
-          goButton.style.display = 'none';
-          roundsButton.style.display = 'inline-block';
-        }
+        // Update button visibility
+        updateButtonVisibility();
       }
 
       function updatePattern() {
@@ -2764,6 +2757,9 @@
         pendingStop = false;
         isPlaying = true;
 
+        // Update button visibility
+        updateButtonVisibility();
+
         // If there's a pattern sequence, ensure the counter and prompt are displayed
         if (patternSequence.length > 0) {
           const errorMessageDiv = document.getElementById('error-message');
@@ -2794,8 +2790,9 @@
         // Set the pending stop flag instead of stopping immediately
         pendingStop = true;
 
-        // Don't clear selections or pending swaps here - let playSequence handle it
-        // when playback actually stops, so the pending swap can be applied first
+        // Show the pending stand notification
+        document.getElementById('pending-stand-notification').style.display =
+          'flex';
 
         // Add stopping class to Stand button
         const standButton = document.querySelector(
@@ -3548,9 +3545,10 @@
         if (isPlaying) {
           // If playback is active, queue the reset without stopping playback
           pendingReset = 'bells';
-          const notification = (document.getElementById(
+          const notification = document.getElementById(
             'pending-rounds-notification'
-          ).style.display = 'flex');
+          );
+          notification.style.display = 'flex';
           return;
         }
 
@@ -3559,6 +3557,9 @@
         selectedBells = [];
         updateDisplay();
         updateHistory('Go!', currentOrder);
+
+        // Update button visibility
+        updateButtonVisibility();
       }
 
       function resetPatterns() {
@@ -3835,6 +3836,9 @@
         standButton.classList.remove('stopping');
         standButton.classList.remove('selected');
 
+        // Update button visibility
+        updateButtonVisibility();
+
         // Clear selections and pending changes
         selectedBells = [];
         pendingSwap = null;
@@ -3846,6 +3850,9 @@
         // Handle pending bell count change
         if (pendingBellCount !== null) {
           applyBellCount(pendingBellCount);
+          // Hide the pending stand notification after applying bell count change
+          document.getElementById('pending-stand-notification').style.display =
+            'none';
         }
 
         // Handle pending patterns box open
@@ -3856,6 +3863,31 @@
             'none';
           togglePatternsBox();
         }
+
+        // Hide the pending stand notification when playback stops
+        document.getElementById('pending-stand-notification').style.display =
+          'none';
+      }
+
+      // Add this function to handle button visibility rules
+      function updateButtonVisibility() {
+        const goButton = document.getElementById('go-button');
+        const standButton = document.querySelector(
+          'button.bell-number-button[onclick="stopPlayback()"]'
+        );
+        const roundsButton = document.getElementById('rounds-button');
+        const isInRounds = currentOrder.every(
+          (bell, index) => bell === index + 1
+        );
+
+        // Go button rules
+        goButton.style.display = isPlaying ? 'none' : 'inline-block';
+
+        // Stand button rules
+        standButton.style.display = isPlaying ? 'inline-block' : 'none';
+
+        // Rounds button rules
+        roundsButton.style.display = isInRounds ? 'none' : 'inline-block';
       }
     </script>
   </body>
