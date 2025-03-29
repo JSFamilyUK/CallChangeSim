@@ -1296,6 +1296,58 @@
           transform: rotate(360deg);
         }
       }
+
+      .sequence-section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .sequence-section h3 {
+        margin: 0 0 1rem 0;
+        color: #007bff;
+        font-size: 1.2rem;
+      }
+
+      .sequence-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .sequence-row {
+        padding: 0.5rem;
+        background: white;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        border: 1px solid #dee2e6;
+      }
+
+      .sequence-error {
+        color: #dc3545;
+        padding: 0.5rem;
+        background: #fff5f5;
+        border-radius: 4px;
+        border: 1px solid #dc3545;
+      }
+
+      #sequence-list {
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 1rem;
+      }
+
+      .sequence-prompt {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #666;
+        margin: 0.5rem 0 1rem 0;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
     </style>
   </head>
   <body>
@@ -1646,6 +1698,14 @@
         <div class="pattern-sequence-available">
           <div class="pattern-sequence-grid" id="available-patterns"></div>
         </div>
+        <button
+          id="show-suggested-changes"
+          class="bell-number-button"
+          style="display: none"
+          onclick="showSuggestedChanges()"
+        >
+          Show Suggested Changes
+        </button>
       </div>
     </div>
 
@@ -1671,6 +1731,7 @@
     <div class="sequence-popup-overlay"></div>
     <div class="sequence-popup">
       <h3>Custom Call Change Sequence</h3>
+      <div id="sequence-prompt" class="sequence-prompt"></div>
       <ul id="sequence-list"></ul>
     </div>
 
@@ -2094,14 +2155,14 @@
           .map(
             h =>
               `<tr onclick="applyHistory('${h.order.join(' ')}')">
-                    <td>${h.change}</td>
-                    <td>${h.order
-                      .map(convertBellNumberForDisplay)
-                      .join('')}</td>
-                    <td>${
-                      h.pattern || ''
-                    }</td> <!-- Display matched pattern or '' -->
-                </tr>`
+                          <td>${h.change}</td>
+                          <td>${h.order
+                            .map(convertBellNumberForDisplay)
+                            .join('')}</td>
+                          <td>${
+                            h.pattern || ''
+                          }</td> <!-- Display matched pattern or '' -->
+                      </tr>`
           )
           .join('');
       }
@@ -2400,10 +2461,10 @@
 
       // Duration (in seconds) per bell stroke
       const bellDurations = {
-        5: 0.33,
-        6: 0.31,
-        8: 0.28,
-        10: 0.25,
+        5: 0.3,
+        6: 0.28,
+        8: 0.26,
+        10: 0.24,
         12: 0.22,
       };
 
@@ -2516,9 +2577,9 @@
                   tbody.innerHTML = '';
                   const headerRow = document.createElement('tr');
                   headerRow.innerHTML = `
-                    <th>Change</th>
-                    <th>Bell Order</th>
-                  `;
+                          <th>Change</th>
+                          <th>Bell Order</th>
+                        `;
                   tbody.appendChild(headerRow);
                 }
 
@@ -3223,16 +3284,115 @@
         position.textContent = patternSequence.length;
         positionsContainer.appendChild(position);
 
+        // If we have at least 2 patterns, calculate and log the optimal sequence
+        if (patternSequence.length >= 2) {
+          const startPattern = patternSequence[patternSequence.length - 2];
+          const endPattern = patternSequence[patternSequence.length - 1];
+
+          // Get the current number of bells from the simulator
+          const currentNumBells = document.querySelectorAll(
+            '#current-order .bell'
+          ).length;
+          const sequence = getPatternSequence(
+            startPattern,
+            endPattern,
+            currentNumBells
+          );
+          //Earliest possible edit point to remove console logging
+          /*
+                if (sequence) {
+                  const callingUpLabel = document.getElementById('calling-up-label');
+                  const isCallingUp =
+                    callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+                    callingUpLabel.style.color === '#007bff';
+                  console.log('\n' + '='.repeat(50));
+                  console.log(
+                    isCallingUp
+                      ? `Calling up from ${startPattern} to ${endPattern} (${currentNumBells} bells):`
+                      : `Calling down from ${startPattern} to ${endPattern} (${currentNumBells} bells):`
+                  );
+                  console.log('='.repeat(50) + '\n');
+
+                  // Start with the initial order
+                  let currentOrder = [...patterns[startPattern][currentNumBells]];
+                  console.log(
+                    `Initial order: ${currentOrder
+                      .map(convertBellNumberForDisplay)
+                      .join('')}`
+                  );
+
+                  // Apply each swap and log the result
+                  sequence.forEach(swap => {
+                    const [first, second] = swap;
+
+                    if (second === 'lead') {
+                      // Handle lead button change
+                      const bellIndex = currentOrder.indexOf(first);
+                      const previousLead = currentOrder[0];
+                      currentOrder.splice(bellIndex, 1);
+                      currentOrder.unshift(first);
+                      console.log(
+                        `${first} Lead | ${currentOrder
+                          .map(convertBellNumberForDisplay)
+                          .join('')}`
+                      );
+                    } else {
+                      // Handle normal swap
+                      const firstIndex = currentOrder.indexOf(first);
+                      const secondIndex = currentOrder.indexOf(second);
+
+                      // Apply the swap based on calling style
+                      const callingUpLabel =
+                        document.getElementById('calling-up-label');
+                      const isCallingUp =
+                        callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+                        callingUpLabel.style.color === '#007bff';
+
+                      if (isCallingUp) {
+                        [currentOrder[firstIndex], currentOrder[secondIndex]] = [
+                          currentOrder[secondIndex],
+                          currentOrder[firstIndex],
+                        ];
+                      } else {
+                        currentOrder.splice(firstIndex, 1);
+                        currentOrder.splice(secondIndex + 1, 0, first);
+                      }
+
+                      console.log(
+                        `${first} to ${second} | ${currentOrder
+                          .map(convertBellNumberForDisplay)
+                          .join('')}`
+                      );
+                    }
+                  });
+                } else {
+                  console.log('\n' + '='.repeat(50));
+                  console.log(
+                    `No valid sequence found from ${startPattern} to ${endPattern} (${currentNumBells} bells)`
+                  );
+                  console.log('='.repeat(50) + '\n');
+                }
+                */
+        }
+        //Latest possible edit point to remove console logging
+
         // Update the Begin Calling This Sequence and Undo buttons visibility
         const beginButton = document.getElementById('begin-sequence-button');
         const undoButton = document.getElementById('undo-sequence-button');
+        const showSuggestedButton = document.getElementById(
+          'show-suggested-changes'
+        );
         if (beginButton) {
           beginButton.style.display =
-            patternSequence.length > 0 ? 'block' : 'none';
+            patternSequence.length > 1 ? 'block' : 'none';
         }
         if (undoButton) {
           undoButton.style.display =
             patternSequence.length > 0 ? 'block' : 'none';
+        }
+        if (showSuggestedButton) {
+          showSuggestedButton.style.display =
+            patternSequence.length > 1 ? 'block' : 'none';
         }
       }
 
@@ -3248,13 +3408,20 @@
         // Update button visibility
         const beginButton = document.getElementById('begin-sequence-button');
         const undoButton = document.getElementById('undo-sequence-button');
+        const showSuggestedButton = document.getElementById(
+          'show-suggested-changes'
+        );
         if (beginButton) {
           beginButton.style.display =
-            patternSequence.length > 0 ? 'block' : 'none';
+            patternSequence.length > 1 ? 'block' : 'none';
         }
         if (undoButton) {
           undoButton.style.display =
             patternSequence.length > 0 ? 'block' : 'none';
+        }
+        if (showSuggestedButton) {
+          showSuggestedButton.style.display =
+            patternSequence.length > 1 ? 'block' : 'none';
         }
       }
 
@@ -3305,6 +3472,7 @@
         const overlay = document.getElementById('overlay');
         patternSequenceBox.style.display = 'none';
         overlay.style.display = 'none';
+        console.clear(); // Clear the console log
       }
 
       function confirmPatternSequence() {
@@ -3424,6 +3592,7 @@
         const popup = document.querySelector('.sequence-popup');
         const overlay = document.querySelector('.sequence-popup-overlay');
         const list = document.getElementById('sequence-list');
+        const prompt = document.getElementById('sequence-prompt');
 
         // Clear and populate the list
         list.innerHTML = '';
@@ -3436,6 +3605,18 @@
           }
           list.appendChild(li);
         });
+
+        // Set up the prompt with calling style and number of bells
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+        const currentNumBells = document.querySelectorAll(
+          '#current-order .bell'
+        ).length;
+        prompt.textContent = `${
+          isCallingUp ? 'Calling Up' : 'Calling Down'
+        } - ${currentNumBells} Bells`;
 
         // Show popup and overlay
         popup.style.display = 'block';
@@ -3581,9 +3762,9 @@
           tbody.innerHTML = '';
           const headerRow = document.createElement('tr');
           headerRow.innerHTML = `
-            <th>Change</th>
-            <th>Bell Order</th>
-          `;
+                  <th>Change</th>
+                  <th>Bell Order</th>
+                `;
           tbody.appendChild(headerRow);
         }
 
@@ -3780,13 +3961,13 @@
           const li = document.createElement('li');
           li.className = index === selectedSequencePattern ? 'selected' : '';
           li.innerHTML = `
-            <span class="pattern-name">${pattern}</span>
-            <div class="pattern-actions">
-              <button class="pattern-sequence-button" onclick="removePatternFromSequence()">Remove</button>
-              <button class="pattern-sequence-button" onclick="movePatternUp()">Up</button>
-              <button class="pattern-sequence-button" onclick="movePatternDown()">Down</button>
-            </div>
-          `;
+                  <span class="pattern-name">${pattern}</span>
+                  <div class="pattern-actions">
+                    <button class="pattern-sequence-button" onclick="removePatternFromSequence()">Remove</button>
+                    <button class="pattern-sequence-button" onclick="movePatternUp()">Up</button>
+                    <button class="pattern-sequence-button" onclick="movePatternDown()">Down</button>
+                  </div>
+                `;
           container.appendChild(li);
         });
 
@@ -3888,6 +4069,383 @@
 
         // Rounds button rules
         roundsButton.style.display = isInRounds ? 'none' : 'inline-block';
+      }
+
+      // Graph theory implementation for finding optimal sequences
+      class PatternGraph {
+        constructor(numBells) {
+          this.numBells = numBells;
+          this.visited = new Set();
+          this.queue = [];
+          this.parents = new Map();
+        }
+
+        // Convert array to string for Set/Map keys
+        arrayToString(arr) {
+          return arr.join(',');
+        }
+
+        // Convert string back to array
+        stringToArray(str) {
+          return str.split(',').map(Number);
+        }
+
+        // Get all possible valid swaps for a given order based on calling style
+        getValidSwaps(order, isCallingUp) {
+          const swaps = [];
+          const callingUpLabel = document.getElementById('calling-up-label');
+          const isCallingUpStyle =
+            callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+            callingUpLabel.style.color === '#007bff';
+
+          // Try all possible pairs of bells
+          for (let i = 0; i < order.length; i++) {
+            for (let j = 0; j < order.length; j++) {
+              if (i === j) continue;
+
+              // Set up the selection to test
+              selectedBells = [order[i], order[j]];
+
+              // Check if this is a valid selection
+              const errorMessageDiv = document.getElementById('error-message');
+              const first = selectedBells[0];
+              const second = selectedBells[1];
+              const firstIndex = order.indexOf(first);
+              const secondIndex = order.indexOf(second);
+
+              let isValid = true;
+
+              if (isCallingUpStyle) {
+                // When calling up, check for adjacent bells
+                if (Math.abs(firstIndex - secondIndex) !== 1) {
+                  isValid = false;
+                  continue;
+                }
+
+                // When calling up, first bell must be earlier than second
+                if (secondIndex < firstIndex) {
+                  isValid = false;
+                  continue;
+                }
+              } else {
+                // When calling down, prevent selecting second bell followed by first bell
+                if (firstIndex === 1 && secondIndex === 0) {
+                  isValid = false;
+                  continue;
+                }
+
+                // When calling down, first bell must be later in the change than the second
+                if (firstIndex < secondIndex) {
+                  isValid = false;
+                  continue;
+                }
+
+                // When calling down, second bell must be two positions earlier than first
+                if (firstIndex - secondIndex !== 2) {
+                  isValid = false;
+                  continue;
+                }
+              }
+
+              if (isValid) {
+                // Create the new order after the swap
+                const newOrder = [...order];
+                if (isCallingUpStyle) {
+                  [newOrder[firstIndex], newOrder[secondIndex]] = [
+                    newOrder[secondIndex],
+                    newOrder[firstIndex],
+                  ];
+                } else {
+                  newOrder.splice(firstIndex, 1);
+                  newOrder.splice(secondIndex + 1, 0, first);
+                }
+
+                swaps.push({
+                  order: newOrder,
+                  swap: [first, second],
+                });
+              }
+            }
+          }
+
+          // Add lead button option when calling down
+          if (!isCallingUpStyle && order.length >= 2) {
+            // Only allow the second bell to be moved to Lead
+            const secondBell = order[1];
+            const previousLead = order[0];
+
+            const newOrder = [...order];
+            newOrder.splice(1, 1);
+            newOrder.unshift(secondBell);
+
+            swaps.push({
+              order: newOrder,
+              swap: [secondBell, 'lead'],
+            });
+          }
+
+          return swaps;
+        }
+
+        // Heuristic function: count bells not in their final position
+        heuristic(current, target) {
+          let count = 0;
+          for (let i = 0; i < current.length; i++) {
+            if (current[i] !== target[i]) count++;
+          }
+          return count;
+        }
+
+        // Find optimal sequence between two patterns
+        findOptimalSequence(startOrder, targetOrder, isCallingUp) {
+          this.visited.clear();
+          this.queue = [];
+          this.parents.clear();
+
+          // Initialize with start order
+          const startKey = this.arrayToString(startOrder);
+          this.queue.push({
+            order: startOrder,
+            key: startKey,
+            g: 0, // Cost so far
+            h: this.heuristic(startOrder, targetOrder), // Estimated cost to target
+          });
+          this.visited.add(startKey);
+
+          while (this.queue.length > 0) {
+            // Get node with lowest f = g + h from queue
+            this.queue.sort((a, b) => a.g + a.h - (b.g + b.h));
+            const current = this.queue.shift();
+
+            // Check if we've reached the target
+            if (
+              this.arrayToString(current.order) ===
+              this.arrayToString(targetOrder)
+            ) {
+              return this.reconstructPath(current.order);
+            }
+
+            // Get all possible valid swaps based on calling style
+            const swaps = this.getValidSwaps(current.order, isCallingUp);
+            for (const swap of swaps) {
+              const newKey = this.arrayToString(swap.order);
+              if (!this.visited.has(newKey)) {
+                this.visited.add(newKey);
+                this.parents.set(newKey, {
+                  order: current.order,
+                  swap: swap.swap,
+                });
+                this.queue.push({
+                  order: swap.order,
+                  key: newKey,
+                  g: current.g + 1,
+                  h: this.heuristic(swap.order, targetOrder),
+                });
+              }
+            }
+          }
+
+          return null; // No path found
+        }
+
+        // Reconstruct the path from target back to start
+        reconstructPath(targetOrder) {
+          const path = [];
+          let currentKey = this.arrayToString(targetOrder);
+
+          while (this.parents.has(currentKey)) {
+            const parent = this.parents.get(currentKey);
+            path.unshift(parent.swap);
+            currentKey = this.arrayToString(parent.order);
+          }
+
+          return path;
+        }
+      }
+
+      // Function to find optimal sequence between any two patterns
+      function findOptimalPatternSequence(startPattern, endPattern, numBells) {
+        const startOrder = patterns[startPattern][numBells];
+        const endOrder = patterns[endPattern][numBells];
+
+        if (!startOrder || !endOrder) {
+          return null;
+        }
+
+        const graph = new PatternGraph(numBells);
+        return graph.findOptimalSequence(startOrder, endOrder, true);
+      }
+
+      // Cache for storing calculated sequences
+      const sequenceCache = new Map();
+
+      // Function to get sequence from cache or calculate it
+      function getPatternSequence(startPattern, endPattern, numBells) {
+        // Get the current number of bells from the simulator
+        const currentNumBells = document.querySelectorAll(
+          '#current-order .bell'
+        ).length;
+
+        const startOrder = patterns[startPattern][currentNumBells];
+        const endOrder = patterns[endPattern][currentNumBells];
+
+        // Get the current calling style
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+
+        const graph = new PatternGraph(currentNumBells);
+        return graph.findOptimalSequence(startOrder, endOrder, isCallingUp);
+      }
+
+      function closePatternSequenceBox() {
+        const box = document.getElementById('pattern-sequence-box');
+        box.style.display = 'none';
+        patternSequence = [];
+        selectedAvailablePattern = null;
+        selectedSequencePattern = null;
+        document.getElementById('pattern-sequence-available').innerHTML = '';
+        document.getElementById('pattern-sequence-current').innerHTML = '';
+        document.getElementById('pattern-sequence-confirm').innerHTML = '';
+        document.getElementById(
+          'pattern-sequence-confirm-placeholder'
+        ).innerHTML = '';
+      }
+
+      // Add the showSuggestedChanges function
+      function showSuggestedChanges() {
+        const popup = document.querySelector('.sequence-popup');
+        const overlay = document.querySelector('.sequence-popup-overlay');
+        const list = document.getElementById('sequence-list');
+        const prompt = document.getElementById('sequence-prompt');
+
+        // Clear the list
+        list.innerHTML = '';
+
+        // Set up the prompt with calling style and number of bells
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+        const currentNumBells = document.querySelectorAll(
+          '#current-order .bell'
+        ).length;
+        prompt.textContent = `${
+          isCallingUp ? 'Calling Up' : 'Calling Down'
+        } - ${currentNumBells} Bells`;
+
+        // For each transition in the sequence
+        for (let i = 0; i < patternSequence.length - 1; i++) {
+          const startPattern = patternSequence[i];
+          const endPattern = patternSequence[i + 1];
+
+          // Create a section for this transition
+          const section = document.createElement('div');
+          section.className = 'sequence-section';
+
+          // Add the transition header
+          const header = document.createElement('h3');
+          header.textContent = `${startPattern} to ${endPattern}:`;
+          section.appendChild(header);
+
+          // Calculate the sequence for this transition
+          const currentNumBells = document.querySelectorAll(
+            '#current-order .bell'
+          ).length;
+          const sequence = getPatternSequence(
+            startPattern,
+            endPattern,
+            currentNumBells
+          );
+
+          if (sequence) {
+            // Create a grid for the changes
+            const grid = document.createElement('div');
+            grid.className = 'sequence-grid';
+
+            // Start with the initial order
+            let currentOrder = [...patterns[startPattern][currentNumBells]];
+            const initialRow = document.createElement('div');
+            initialRow.className = 'sequence-row';
+            initialRow.textContent = `${startPattern}: ${currentOrder
+              .map(convertBellNumberForDisplay)
+              .join('')}`;
+            grid.appendChild(initialRow);
+
+            // Add each change to the grid
+            sequence.forEach(swap => {
+              const [first, second] = swap;
+              const row = document.createElement('div');
+              row.className = 'sequence-row';
+
+              if (second === 'lead') {
+                // Handle lead button change
+                const bellIndex = currentOrder.indexOf(first);
+                const previousLead = currentOrder[0];
+                currentOrder.splice(bellIndex, 1);
+                currentOrder.unshift(first);
+                row.textContent = `${first} Lead | ${currentOrder
+                  .map(convertBellNumberForDisplay)
+                  .join('')}`;
+              } else {
+                // Handle normal swap
+                const firstIndex = currentOrder.indexOf(first);
+                const secondIndex = currentOrder.indexOf(second);
+
+                // Apply the swap based on calling style
+                const callingUpLabel =
+                  document.getElementById('calling-up-label');
+                const isCallingUp =
+                  callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+                  callingUpLabel.style.color === '#007bff';
+
+                if (isCallingUp) {
+                  [currentOrder[firstIndex], currentOrder[secondIndex]] = [
+                    currentOrder[secondIndex],
+                    currentOrder[firstIndex],
+                  ];
+                } else {
+                  currentOrder.splice(firstIndex, 1);
+                  currentOrder.splice(secondIndex + 1, 0, first);
+                }
+
+                row.textContent = `${first} to ${second} | ${currentOrder
+                  .map(convertBellNumberForDisplay)
+                  .join('')}`;
+              }
+
+              grid.appendChild(row);
+            });
+
+            section.appendChild(grid);
+          } else {
+            const error = document.createElement('div');
+            error.className = 'sequence-error';
+            error.textContent = 'No valid sequence found';
+            section.appendChild(error);
+          }
+
+          list.appendChild(section);
+        }
+
+        // Show popup and overlay
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+
+        // Add click handlers to dismiss
+        const dismissPopup = () => {
+          popup.style.display = 'none';
+          overlay.style.display = 'none';
+        };
+
+        overlay.onclick = dismissPopup;
+        popup.onclick = dismissPopup;
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            dismissPopup();
+          }
+        });
       }
     </script>
   </body>
