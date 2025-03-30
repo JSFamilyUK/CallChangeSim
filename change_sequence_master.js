@@ -1,9 +1,4 @@
-// This file contains the change sequences for the "calling down" style.
-// Each transformation contains:
-// Number of bells
-// Source pattern name and bell order
-// Target pattern name and bell order
-// Sequence of changes needed
+// This file contains the change sequences master data
 
 const changeSequences = {
   5: [
@@ -2695,4 +2690,3 @@ const changeSequences = {
     //End of 12 Bell Princes Transitions
   ],
 };
-
