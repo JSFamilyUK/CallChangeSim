@@ -21,3 +21,4 @@ yarn-error.log
 .env.*.local 
 sync_patterns.js
 sync_patterns.js
+sync_patterns.js
