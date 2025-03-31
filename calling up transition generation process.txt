@@ -1,0 +1,96 @@
+Calling Up Transition Generation Process
+=====================================
+
+1. Source Files
+--------------
+- calculate_swaps_up.js: Contains the core logic for calculating valid moves and transitions
+- generate_transitions_up.js: Orchestrates the generation process
+- transition_data_up.json: The output file where all transitions are stored
+- change_sequences.js: Contains the source and target patterns for each number of bells
+
+2. Process Flow
+--------------
+a) Initial Setup (generate_transitions_up.js):
+   - Import required functions from calculate_swaps_up.js
+   - Import change sequences from change_sequences.js
+   - Create transition data structure using createTransitionData(changeSequences)
+
+b) Data Structure Creation (calculate_swaps_up.js):
+   - For each number of bells (5, 6, 8, 10, 12)
+   - For each pattern in the change sequences
+   - Create a nested structure storing:
+     * Source pattern
+     * Target pattern
+     * Source order
+     * Target order
+
+c) Transition Generation:
+   - For each number of bells
+   - For each source pattern
+   - For each target pattern:
+     * Calculate minimum swaps using findMinimumSwaps
+     * Format the result with:
+       - Number of bells
+       - Source pattern
+       - Target pattern
+       - Number of swaps
+       - List of swaps (formatted as "X-Y")
+       - Bell orders after each swap
+
+3. Valid Move Rules
+------------------
+- Only adjacent bell swaps are allowed
+- The first bell in the swap must have a lower position than the second bell
+- When swapping, bells simply exchange positions
+- No special "Lead" moves are used in calling up
+- Each move must bring the sequence closer to the target order
+
+Example for [1,2,3,4]:
+- Valid: [2,3] → 1,3,2,4 (adjacent bells, 2 < 3)
+- Valid: [1,2] → 2,1,3,4 (adjacent bells, 1 < 2)
+- Invalid: [3,1] (not adjacent)
+- Invalid: [2,1] (first bell must have lower position)
+
+4. Output Format (transition_data_up.json)
+----------------------------------------
+{
+  "direction": "up",
+  "transitions": [
+    {
+      "numberOfBells": 5,
+      "sourcePattern": "Rounds",
+      "targetPattern": "Back Rounds",
+      "numberOfSwaps": 10,
+      "swaps": ["2-3", "4-5", "3-4", "2-3", "1-2", "0-1", ...],
+      "bellOrders": ["12345", "21345", "21435", ...]
+    }
+  ]
+}
+
+5. Example Transition
+--------------------
+For moving from Rounds to Back Rounds in 12 bells:
+Step 0: 1,2,3,4,5,6,7,8,9,10,11,12
+Step 1: 2,1,3,4,5,6,7,8,9,10,11,12  (using [1,2])
+Step 2: 2,1,4,3,5,6,7,8,9,10,11,12  (using [3,4])
+Step 3: 2,1,4,3,6,5,7,8,9,10,11,12  (using [5,6])
+... continues until reaching target order
+
+6. Final Steps
+-------------
+- Sort transitions by:
+  1. Number of bells
+  2. Source pattern
+  3. Target pattern
+- Write formatted data to transition_data_up.json
+- Test example transitions to verify correctness
+
+Process Requirements
+-------------------
+1. All moves must be valid according to the rules
+2. Find the shortest path to the target order
+3. Avoid cycles by tracking visited orders
+4. Handle all possible transitions between named patterns
+5. Only use adjacent bell swaps
+6. First bell in swap must have lower position
+7. Track and display bell orders after each swap 

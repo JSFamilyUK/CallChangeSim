@@ -1,4 +1,4 @@
-// This file contains the change sequences for the "calling down" style.
+// This file contains the change sequences for the "calling up" style.
 // Each transformation contains:
 // Number of bells
 // Source pattern name and bell order
@@ -2696,3 +2696,4 @@ const changeSequences = {
   ],
 };
 
+module.exports = changeSequences;
