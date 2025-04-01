@@ -30,9 +30,10 @@ for (const [numBells, patterns] of Object.entries(transitionData)) {
         numberOfSwaps: result.swaps.length,
         initialOrder: result.bellOrders[0].join(''),
         swaps_up: result.swaps.map(swap => `${swap[0]}-${swap[1]}`).join('|'),
-        swaps_display_up: result.swaps
-          .map(swap => `${swap[0]} to ${swap[1]}`)
-          .join(', '),
+        swaps_display_up:
+          result.swaps.length === 0
+            ? 'Changes Not Currently Available'
+            : result.swaps.map(swap => `${swap[0]} to ${swap[1]}`).join(', '),
         swaps_positions_up: result.swaps
           .map((swap, index) => {
             // Get the current order at the time of this swap
@@ -99,47 +100,50 @@ for (const [numBells, patterns] of Object.entries(transitionData)) {
             return `${bell1}-${bell2}`;
           })
           .join('|'),
-        swaps_display_down: result.swaps
-          .map((swap, index) => {
-            // Get the current order at the time of this swap
-            const currentOrder = result.bellOrders[index];
-            const upPos1 = currentOrder.indexOf(swap[0]) + 1;
-            const upPos2 = currentOrder.indexOf(swap[1]) + 1;
-            const upPositions = `${upPos1}-${upPos2}`;
+        swaps_display_down:
+          result.swaps.length === 0
+            ? 'Changes Not Currently Available'
+            : result.swaps
+                .map((swap, index) => {
+                  // Get the current order at the time of this swap
+                  const currentOrder = result.bellOrders[index];
+                  const upPos1 = currentOrder.indexOf(swap[0]) + 1;
+                  const upPos2 = currentOrder.indexOf(swap[1]) + 1;
+                  const upPositions = `${upPos1}-${upPos2}`;
 
-            // Map up positions to down positions
-            const downPositions = upPositions
-              .replace('1-2', '2-Lead')
-              .replace('2-3', '3-1')
-              .replace('3-4', '4-2')
-              .replace('4-5', '5-3')
-              .replace('5-6', '6-4')
-              .replace('6-7', '7-5')
-              .replace('7-8', '8-6')
-              .replace('8-9', '9-7')
-              .replace('9-10', '10-8')
-              .replace('10-11', '11-9')
-              .replace('11-12', '12-10');
+                  // Map up positions to down positions
+                  const downPositions = upPositions
+                    .replace('1-2', '2-Lead')
+                    .replace('2-3', '3-1')
+                    .replace('3-4', '4-2')
+                    .replace('4-5', '5-3')
+                    .replace('5-6', '6-4')
+                    .replace('6-7', '7-5')
+                    .replace('7-8', '8-6')
+                    .replace('8-9', '9-7')
+                    .replace('9-10', '10-8')
+                    .replace('10-11', '11-9')
+                    .replace('11-12', '12-10');
 
-            // Get the bell numbers at the down positions
-            const [pos1, pos2] = downPositions.split('-');
-            const bell1 =
-              pos1 === 'Lead' ? 'Lead' : currentOrder[parseInt(pos1) - 1];
-            const bell2 =
-              pos2 === 'Lead' ? 'Lead' : currentOrder[parseInt(pos2) - 1];
+                  // Get the bell numbers at the down positions
+                  const [pos1, pos2] = downPositions.split('-');
+                  const bell1 =
+                    pos1 === 'Lead' ? 'Lead' : currentOrder[parseInt(pos1) - 1];
+                  const bell2 =
+                    pos2 === 'Lead' ? 'Lead' : currentOrder[parseInt(pos2) - 1];
 
-            return `${bell1}-${bell2}`;
-          })
-          .join('|')
-          .split('|')
-          .map(swap => {
-            const [bell1, bell2] = swap.split('-');
-            if (bell2 === 'Lead') {
-              return `${bell1} Lead`;
-            }
-            return `${bell1} to ${bell2}`;
-          })
-          .join(', '),
+                  return `${bell1}-${bell2}`;
+                })
+                .join('|')
+                .split('|')
+                .map(swap => {
+                  const [bell1, bell2] = swap.split('-');
+                  if (bell2 === 'Lead') {
+                    return `${bell1} Lead`;
+                  }
+                  return `${bell1} to ${bell2}`;
+                })
+                .join(', '),
         bellOrders: result.bellOrders
           .slice(1)
           .map(order => order.join(''))
@@ -161,7 +165,7 @@ formattedData.transitions.sort((a, b) => {
 // Save the formatted transition data to a file
 const fs = require('fs');
 fs.writeFileSync(
-  'transition_data_up.json',
+  'transition_data.json',
   JSON.stringify(formattedData, null, 2)
 );
 
@@ -664,4 +668,4 @@ resultTittums.bellOrders.slice(1).forEach((order, index) => {
   console.log(`Step ${index + 1}: ${order.join('')}`);
 });
 
-console.log('\nTransition data has been saved to transition_data_up.json');
+console.log('\nTransition data has been saved to transition_data.json');
