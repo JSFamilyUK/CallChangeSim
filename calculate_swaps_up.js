@@ -1,67 +1,98 @@
 /**
  * Calculates the minimum number of swaps needed to transform source order into target order
- * Only allows adjacent bell swaps, and first bell in swap must be the one with lower position
+ * Implementation based on counting inversions as proven in:
+ * https://stackoverflow.com/questions/20990127/sorting-a-sequence-by-swapping-adjacent-elements-using-minimum-swaps
  * @param {number[]} sourceOrder - The starting order of bells
  * @param {number[]} targetOrder - The desired order of bells
- * @returns {Array<[number, number]>} Array of pairs representing the swaps needed
+ * @returns {{ swaps: Array<[number, number]>, bellOrders: Array<number[]> }} Array of swaps and resulting orders
  */
 function calculateMinimumSwaps(sourceOrder, targetOrder) {
   const n = sourceOrder.length;
-  const swaps = [];
-  const bellOrders = [sourceOrder.slice()]; // Track initial order
-  let currentOrder = sourceOrder.slice();
 
-  // Create a mapping of target positions
+  // First, create a mapping of target positions
   const targetPositions = new Map();
   for (let i = 0; i < n; i++) {
     targetPositions.set(targetOrder[i], i);
   }
 
-  // For each position except the last one
-  for (let i = 0; i < n - 1; i++) {
-    // Find the bell that should be at position i
-    const requiredBell = targetOrder[i];
+  // Convert source array to relative positions
+  const relativeOrder = sourceOrder.map(bell => targetPositions.get(bell));
 
-    // If the required bell is not at the correct position
-    if (currentOrder[i] !== requiredBell) {
-      // Find the current position of the required bell
-      let currentPos = currentOrder.indexOf(requiredBell);
+  // Helper function to count inversions and track swaps during merge
+  function mergeAndCount(arr, left, mid, right, swaps) {
+    const temp = new Array(right - left + 1);
+    let i = left;
+    let j = mid + 1;
+    let k = 0;
+    let invCount = 0;
 
-      // Move the required bell to its correct position
-      while (currentPos > i) {
-        // Only swap if bells are adjacent and first bell has lower position
-        if (
-          currentPos - 1 >= i &&
-          currentOrder[currentPos] < currentOrder[currentPos - 1]
-        ) {
-          // Swap with the bell above
-          [currentOrder[currentPos], currentOrder[currentPos - 1]] = [
-            currentOrder[currentPos - 1],
-            currentOrder[currentPos],
-          ];
-          swaps.push([currentPos, currentPos - 1]);
-          bellOrders.push(currentOrder.slice()); // Track order after swap
-          currentPos--;
-        } else {
-          // If we can't swap, we need to move other bells
-          let j = currentPos - 1;
-          while (j >= i) {
-            if (currentOrder[j] < currentOrder[j + 1]) {
-              [currentOrder[j], currentOrder[j + 1]] = [
-                currentOrder[j + 1],
-                currentOrder[j],
-              ];
-              swaps.push([j, j + 1]);
-              bellOrders.push(currentOrder.slice()); // Track order after swap
-            }
-            j--;
-          }
+    while (i <= mid && j <= right) {
+      if (arr[i] <= arr[j]) {
+        temp[k++] = arr[i++];
+      } else {
+        // Found an inversion - all remaining elements in left half form inversions
+        invCount += mid - i + 1;
+        // Track the required swaps to fix these inversions
+        for (let swap = mid; swap >= i; swap--) {
+          swaps.push([swap, swap + 1]);
         }
+        temp[k++] = arr[j++];
       }
+    }
+
+    while (i <= mid) {
+      temp[k++] = arr[i++];
+    }
+    while (j <= right) {
+      temp[k++] = arr[j++];
+    }
+
+    // Copy back to original array
+    for (i = 0; i < k; i++) {
+      arr[left + i] = temp[i];
+    }
+
+    return invCount;
+  }
+
+  // Helper function to sort and count inversions
+  function sortAndCount(arr, left, right, swaps) {
+    let invCount = 0;
+    if (left < right) {
+      const mid = Math.floor((left + right) / 2);
+      invCount += sortAndCount(arr, left, mid, swaps);
+      invCount += sortAndCount(arr, mid + 1, right, swaps);
+      invCount += mergeAndCount(arr, left, mid, right, swaps);
+    }
+    return invCount;
+  }
+
+  // Get the sequence of swaps needed
+  const swaps = [];
+  const workingArray = [...relativeOrder];
+  sortAndCount(workingArray, 0, n - 1, swaps);
+
+  // Generate the sequence of bell orders
+  const bellOrders = [sourceOrder.slice()];
+  let currentOrder = sourceOrder.slice();
+  const appliedSwaps = [];
+
+  // Apply each swap and track the resulting orders
+  for (const [i, j] of swaps) {
+    // Only apply the swap if it follows the "lower bell first" rule
+    if (currentOrder[i] < currentOrder[j]) {
+      // Store the actual bell numbers being swapped
+      appliedSwaps.push([currentOrder[i], currentOrder[j]]);
+      // Perform the swap
+      [currentOrder[i], currentOrder[j]] = [currentOrder[j], currentOrder[i]];
+      bellOrders.push(currentOrder.slice());
     }
   }
 
-  return { swaps, bellOrders };
+  return {
+    swaps: appliedSwaps,
+    bellOrders: bellOrders,
+  };
 }
 
 /**

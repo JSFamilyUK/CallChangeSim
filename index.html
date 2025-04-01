@@ -1257,6 +1257,109 @@
         background-color: darkred;
         pointer-events: none;
       }
+
+      .pattern-sequence-selector {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .pattern-sequence-selector h3 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-size: 1.2em;
+      }
+
+      .calling-style-selector {
+        margin-bottom: 15px;
+      }
+
+      .calling-style-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 5px;
+      }
+
+      .calling-style-btn {
+        padding: 8px 16px;
+        border: 1px solid #007bff;
+        background: white;
+        color: #007bff;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .calling-style-btn.active {
+        background: #007bff;
+        color: white;
+      }
+
+      .pattern-selection {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+      }
+
+      .pattern-select-group {
+        flex: 1;
+      }
+
+      .pattern-select-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #666;
+      }
+
+      .pattern-select-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+      }
+
+      .sequence-display {
+        margin-top: 20px;
+        padding: 15px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .sequence-display h4 {
+        margin: 0 0 10px 0;
+        color: #333;
+      }
+
+      .sequence-step {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .sequence-step:last-child {
+        border-bottom: none;
+      }
+
+      .step-number {
+        width: 30px;
+        color: #666;
+        font-weight: bold;
+      }
+
+      .step-swap {
+        width: 100px;
+        color: #007bff;
+        font-weight: bold;
+      }
+
+      .step-order {
+        flex: 1;
+        font-family: monospace;
+      }
     </style>
   </head>
   <body>
@@ -1684,6 +1787,45 @@
         </button>
       </div>
       <div class="reference-container" id="referenceDisplay"></div>
+      <div id="reference" class="reference">
+        <div id="reference-bells" class="reference-bells"></div>
+
+        <!-- Pattern Sequence Selection -->
+        <div class="pattern-sequence-selector">
+          <h3>Pattern Sequence</h3>
+
+          <!-- Calling Style Selection -->
+          <div class="calling-style-selector">
+            <label>Calling Style:</label>
+            <div class="calling-style-buttons">
+              <button id="calling-up-btn" class="calling-style-btn active">
+                Calling Up
+              </button>
+              <button id="calling-down-btn" class="calling-style-btn">
+                Calling Down
+              </button>
+            </div>
+          </div>
+
+          <!-- Pattern Selection -->
+          <div class="pattern-selection">
+            <div class="pattern-select-group">
+              <label>From Pattern:</label>
+              <select id="source-pattern-select"></select>
+            </div>
+            <div class="pattern-select-group">
+              <label>To Pattern:</label>
+              <select id="target-pattern-select"></select>
+            </div>
+          </div>
+
+          <!-- Sequence Display -->
+          <div id="sequence-display" class="sequence-display">
+            <h4>Transition Sequence</h4>
+            <div id="sequence-content"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -3925,6 +4067,182 @@
         document.getElementById('pending-stand-notification').style.display =
           'none';
       }
+
+      // Add these variables at the top with other global variables
+      let currentCallingStyle = 'up'; // Changed default to 'up'
+      let transitionData = null;
+
+      // Add this function to load transition data
+      async function loadTransitionData() {
+        try {
+          const response = await fetch(
+            `transition_data_${currentCallingStyle}.json`
+          );
+          transitionData = await response.json();
+          updatePatternSelects();
+          displaySequence(); // Refresh sequence display when calling style changes
+        } catch (error) {
+          console.error('Error loading transition data:', error);
+        }
+      }
+
+      // Add this function to update pattern selects
+      function updatePatternSelects() {
+        const sourceSelect = document.getElementById('source-pattern-select');
+        const targetSelect = document.getElementById('target-pattern-select');
+        const numBells = document.querySelectorAll(
+          '#current-order .bell'
+        ).length;
+
+        // Clear existing options
+        sourceSelect.innerHTML = '';
+        targetSelect.innerHTML = '';
+
+        // Get unique patterns for current number of bells
+        const patterns = new Set();
+        transitionData.transitions.forEach(transition => {
+          if (transition.numberOfBells === numBells) {
+            patterns.add(transition.sourcePattern);
+            patterns.add(transition.targetPattern);
+          }
+        });
+
+        // Define pattern order (Rounds first)
+        const patternOrder = [
+          'Rounds',
+          'Back Rounds',
+          'Queens',
+          'Kings',
+          'Tittums',
+          'Weasels',
+          'Roller Coaster',
+          'Exploding Tittums',
+          'Hagdyke',
+        ];
+
+        // Add options in specified order
+        patternOrder.forEach(pattern => {
+          if (patterns.has(pattern)) {
+            sourceSelect.add(new Option(pattern, pattern));
+            targetSelect.add(new Option(pattern, pattern));
+          }
+        });
+      }
+
+      // Add this function to reset the reference box
+      function resetReferenceBox() {
+        const sourceSelect = document.getElementById('source-pattern-select');
+        const targetSelect = document.getElementById('target-pattern-select');
+        const sequenceContent = document.getElementById('sequence-content');
+
+        // Reset selects to first option
+        if (sourceSelect.options.length > 0) sourceSelect.selectedIndex = 0;
+        if (targetSelect.options.length > 0) targetSelect.selectedIndex = 0;
+
+        // Clear sequence display
+        sequenceContent.innerHTML = '';
+      }
+
+      // Add this function to display the sequence
+      function displaySequence() {
+        const sourcePattern = document.getElementById(
+          'source-pattern-select'
+        ).value;
+        const targetPattern = document.getElementById(
+          'target-pattern-select'
+        ).value;
+        const numBells = document.querySelectorAll(
+          '#current-order .bell'
+        ).length;
+
+        // Find the transition
+        const transition = transitionData.transitions.find(
+          t =>
+            t.numberOfBells === numBells &&
+            t.sourcePattern === sourcePattern &&
+            t.targetPattern === targetPattern
+        );
+
+        if (!transition) {
+          document.getElementById('sequence-content').innerHTML =
+            '<p>No transition found between these patterns.</p>';
+          return;
+        }
+
+        // Format the sequence display
+        const sequenceHtml = transition.bellOrders
+          .map((order, index) => {
+            // Convert string order to array of numbers
+            const orderArray = order.split('').map(convertDisplayToNumber);
+
+            return `
+            <div class="sequence-step">
+              <span class="step-number">${index + 1}</span>
+              ${
+                index < transition.swaps.length
+                  ? `<span class="step-swap">${transition.swaps[index]}</span>`
+                  : '<span class="step-swap"></span>'
+              }
+              <span class="step-order">${orderArray
+                .map(convertBellNumberForDisplay)
+                .join('')}</span>
+            </div>
+          `;
+          })
+          .join('');
+
+        document.getElementById('sequence-content').innerHTML = sequenceHtml;
+      }
+
+      // Add event listeners
+      document.addEventListener('DOMContentLoaded', function () {
+        // Load initial transition data
+        loadTransitionData();
+
+        // Add calling style button listeners
+        document
+          .getElementById('calling-up-btn')
+          .addEventListener('click', function () {
+            currentCallingStyle = 'up';
+            this.classList.add('active');
+            document
+              .getElementById('calling-down-btn')
+              .classList.remove('active');
+            loadTransitionData();
+          });
+
+        document
+          .getElementById('calling-down-btn')
+          .addEventListener('click', function () {
+            currentCallingStyle = 'down';
+            this.classList.add('active');
+            document
+              .getElementById('calling-up-btn')
+              .classList.remove('active');
+            loadTransitionData();
+          });
+
+        // Add pattern select listeners
+        document
+          .getElementById('source-pattern-select')
+          .addEventListener('change', displaySequence);
+        document
+          .getElementById('target-pattern-select')
+          .addEventListener('change', displaySequence);
+
+        // Update pattern selects when number of bells changes
+        document.querySelectorAll('.bell-number-button').forEach(button => {
+          button.addEventListener('click', function () {
+            const count = parseInt(this.textContent);
+            if (count !== referenceBellCount) {
+              setTimeout(() => {
+                updatePatternSelects();
+                resetReferenceBox();
+              }, 100); // Small delay to ensure bell count is updated
+            }
+          });
+        });
+      });
     </script>
   </body>
 </html>
