@@ -1279,6 +1279,7 @@
         display: flex;
         gap: 10px;
         margin-top: 5px;
+        justify-content: center;
       }
 
       .calling-style-btn {
@@ -1289,6 +1290,7 @@
         border-radius: 4px;
         cursor: pointer;
         transition: all 0.2s;
+        min-width: 120px;
       }
 
       .calling-style-btn.active {
@@ -1770,21 +1772,11 @@
         </div>
       </div>
       <div class="reference-bell-buttons" id="referenceBellButtons">
-        <button class="reference-bell-button" onclick="selectReferenceBell(5)">
-          5 Bells
-        </button>
-        <button class="reference-bell-button" onclick="selectReferenceBell(6)">
-          6 Bells
-        </button>
-        <button class="reference-bell-button" onclick="selectReferenceBell(8)">
-          8 bells
-        </button>
-        <button class="reference-bell-button" onclick="selectReferenceBell(10)">
-          10 Bells
-        </button>
-        <button class="reference-bell-button" onclick="selectReferenceBell(12)">
-          12 Bells
-        </button>
+        <button class="reference-bell-button">5 Bells</button>
+        <button class="reference-bell-button">6 Bells</button>
+        <button class="reference-bell-button">8 bells</button>
+        <button class="reference-bell-button">10 Bells</button>
+        <button class="reference-bell-button">12 Bells</button>
       </div>
       <div class="reference-container" id="referenceDisplay"></div>
       <div id="reference" class="reference">
@@ -1796,7 +1788,6 @@
 
           <!-- Calling Style Selection -->
           <div class="calling-style-selector">
-            <label>Calling Style:</label>
             <div class="calling-style-buttons">
               <button id="calling-up-btn" class="calling-style-btn active">
                 Calling Up
@@ -1821,7 +1812,7 @@
 
           <!-- Sequence Display -->
           <div id="sequence-display" class="sequence-display">
-            <h4>Transition Sequence</h4>
+            <h4>Example Change Sequence</h4>
             <div id="sequence-content"></div>
           </div>
         </div>
@@ -4075,14 +4066,20 @@
       // Add this function to load transition data
       async function loadTransitionData() {
         try {
-          const response = await fetch(
-            `transition_data_${currentCallingStyle}.json`
-          );
+          const response = await fetch('transition_data.json');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
           transitionData = await response.json();
+          if (!transitionData || !transitionData.transitions) {
+            throw new Error('Invalid transition data format');
+          }
           updatePatternSelects();
           displaySequence(); // Refresh sequence display when calling style changes
         } catch (error) {
           console.error('Error loading transition data:', error);
+          document.getElementById('sequence-content').innerHTML =
+            '<p>Error loading transition data. Please try again.</p>';
         }
       }
 
@@ -4090,9 +4087,6 @@
       function updatePatternSelects() {
         const sourceSelect = document.getElementById('source-pattern-select');
         const targetSelect = document.getElementById('target-pattern-select');
-        const numBells = document.querySelectorAll(
-          '#current-order .bell'
-        ).length;
 
         // Clear existing options
         sourceSelect.innerHTML = '';
@@ -4101,7 +4095,7 @@
         // Get unique patterns for current number of bells
         const patterns = new Set();
         transitionData.transitions.forEach(transition => {
-          if (transition.numberOfBells === numBells) {
+          if (transition.numberOfBells === referenceBellCount) {
             patterns.add(transition.sourcePattern);
             patterns.add(transition.targetPattern);
           }
@@ -4135,12 +4129,49 @@
         const targetSelect = document.getElementById('target-pattern-select');
         const sequenceContent = document.getElementById('sequence-content');
 
+        // Clear existing options
+        sourceSelect.innerHTML = '';
+        targetSelect.innerHTML = '';
+
+        // Get unique patterns for current number of bells
+        const patterns = new Set();
+        transitionData.transitions.forEach(transition => {
+          if (transition.numberOfBells === referenceBellCount) {
+            patterns.add(transition.sourcePattern);
+            patterns.add(transition.targetPattern);
+          }
+        });
+
+        // Define pattern order (Rounds first)
+        const patternOrder = [
+          'Rounds',
+          'Back Rounds',
+          'Queens',
+          'Kings',
+          'Tittums',
+          'Weasels',
+          'Roller Coaster',
+          'Exploding Tittums',
+          'Hagdyke',
+        ];
+
+        // Add options in specified order
+        patternOrder.forEach(pattern => {
+          if (patterns.has(pattern)) {
+            sourceSelect.add(new Option(pattern, pattern));
+            targetSelect.add(new Option(pattern, pattern));
+          }
+        });
+
         // Reset selects to first option
         if (sourceSelect.options.length > 0) sourceSelect.selectedIndex = 0;
         if (targetSelect.options.length > 0) targetSelect.selectedIndex = 0;
 
         // Clear sequence display
         sequenceContent.innerHTML = '';
+
+        // Trigger displaySequence to show initial state
+        displaySequence();
       }
 
       // Add this function to display the sequence
@@ -4151,26 +4182,36 @@
         const targetPattern = document.getElementById(
           'target-pattern-select'
         ).value;
-        const numBells = document.querySelectorAll(
-          '#current-order .bell'
-        ).length;
+
+        // Only proceed if both patterns are selected
+        if (!sourcePattern || !targetPattern) {
+          document.getElementById('sequence-content').innerHTML = '';
+          return;
+        }
 
         // Find the transition
         const transition = transitionData.transitions.find(
           t =>
-            t.numberOfBells === numBells &&
+            t.numberOfBells === referenceBellCount &&
             t.sourcePattern === sourcePattern &&
             t.targetPattern === targetPattern
         );
 
         if (!transition) {
           document.getElementById('sequence-content').innerHTML =
-            '<p>No transition found between these patterns.</p>';
+            '<p>Choose two different patterns.</p>';
           return;
         }
 
+        // Get the appropriate swaps display and bell orders based on calling style
+        const swapsDisplay =
+          currentCallingStyle === 'up'
+            ? transition.swaps_display_up.split(', ')
+            : transition.swaps_display_down.split(', ');
+        const bellOrders = transition.bellOrders.split('|');
+
         // Format the sequence display
-        const sequenceHtml = transition.bellOrders
+        const sequenceHtml = bellOrders
           .map((order, index) => {
             // Convert string order to array of numbers
             const orderArray = order.split('').map(convertDisplayToNumber);
@@ -4179,8 +4220,8 @@
             <div class="sequence-step">
               <span class="step-number">${index + 1}</span>
               ${
-                index < transition.swaps.length
-                  ? `<span class="step-swap">${transition.swaps[index]}</span>`
+                index < swapsDisplay.length
+                  ? `<span class="step-swap">${swapsDisplay[index]}</span>`
                   : '<span class="step-swap"></span>'
               }
               <span class="step-order">${orderArray
@@ -4208,7 +4249,7 @@
             document
               .getElementById('calling-down-btn')
               .classList.remove('active');
-            loadTransitionData();
+            displaySequence(); // Only update the sequence display
           });
 
         document
@@ -4219,7 +4260,7 @@
             document
               .getElementById('calling-up-btn')
               .classList.remove('active');
-            loadTransitionData();
+            displaySequence(); // Only update the sequence display
           });
 
         // Add pattern select listeners
@@ -4230,15 +4271,16 @@
           .getElementById('target-pattern-select')
           .addEventListener('change', displaySequence);
 
-        // Update pattern selects when number of bells changes
-        document.querySelectorAll('.bell-number-button').forEach(button => {
+        // Add reference bell button listeners
+        document.querySelectorAll('.reference-bell-button').forEach(button => {
           button.addEventListener('click', function () {
             const count = parseInt(this.textContent);
             if (count !== referenceBellCount) {
-              setTimeout(() => {
-                updatePatternSelects();
-                resetReferenceBox();
-              }, 100); // Small delay to ensure bell count is updated
+              // Update reference bell count and button styles
+              selectReferenceBell(count);
+
+              // Reset reference box with new patterns
+              resetReferenceBox();
             }
           });
         });

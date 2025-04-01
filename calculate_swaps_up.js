@@ -7,92 +7,89 @@
  * @returns {{ swaps: Array<[number, number]>, bellOrders: Array<number[]> }} Array of swaps and resulting orders
  */
 function calculateMinimumSwaps(sourceOrder, targetOrder) {
-  const n = sourceOrder.length;
+  const swaps = [];
+  const currentOrder = [...sourceOrder];
+  const maxIterations = 1000;
+  let iterations = 0;
+  let prioritizeHighest = true; // Start with highest priority
 
-  // First, create a mapping of target positions
-  const targetPositions = new Map();
-  for (let i = 0; i < n; i++) {
-    targetPositions.set(targetOrder[i], i);
-  }
+  console.log('\nInitial order:', currentOrder.join(','));
+  console.log('Target order:', targetOrder.join(','));
 
-  // Convert source array to relative positions
-  const relativeOrder = sourceOrder.map(bell => targetPositions.get(bell));
+  while (
+    !arraysEqual(currentOrder, targetOrder) &&
+    iterations < maxIterations
+  ) {
+    console.log(`\nIteration ${iterations}:`);
+    console.log('Order before swap:', currentOrder.join(','));
 
-  // Helper function to count inversions and track swaps during merge
-  function mergeAndCount(arr, left, mid, right, swaps) {
-    const temp = new Array(right - left + 1);
-    let i = left;
-    let j = mid + 1;
-    let k = 0;
-    let invCount = 0;
-
-    while (i <= mid && j <= right) {
-      if (arr[i] <= arr[j]) {
-        temp[k++] = arr[i++];
-      } else {
-        // Found an inversion - all remaining elements in left half form inversions
-        invCount += mid - i + 1;
-        // Track the required swaps to fix these inversions
-        for (let swap = mid; swap >= i; swap--) {
-          swaps.push([swap, swap + 1]);
-        }
-        temp[k++] = arr[j++];
+    // Find all positions that need to be filled
+    let positionsToFill = [];
+    for (let i = 0; i < currentOrder.length; i++) {
+      if (currentOrder[i] !== targetOrder[i]) {
+        positionsToFill.push(i);
       }
     }
 
-    while (i <= mid) {
-      temp[k++] = arr[i++];
-    }
-    while (j <= right) {
-      temp[k++] = arr[j++];
+    if (positionsToFill.length === 0) {
+      break; // All positions are filled correctly
     }
 
-    // Copy back to original array
-    for (i = 0; i < k; i++) {
-      arr[left + i] = temp[i];
+    // Find the bell to move based on priority
+    let bellToMove;
+    let currentPosition;
+
+    if (prioritizeHighest) {
+      // Find the highest position that needs to be filled
+      const highestPosition = Math.max(...positionsToFill);
+      bellToMove = targetOrder[highestPosition];
+      currentPosition = currentOrder.indexOf(bellToMove);
+    } else {
+      // Find the lowest position that needs to be filled
+      const lowestPosition = Math.min(...positionsToFill);
+      bellToMove = targetOrder[lowestPosition];
+      currentPosition = currentOrder.indexOf(bellToMove);
     }
 
-    return invCount;
+    // Toggle priority for next iteration
+    prioritizeHighest = !prioritizeHighest;
+
+    if (currentPosition === -1) {
+      continue; // Bell not found in current order
+    }
+
+    // If the bell is below its target position, swap up
+    if (currentPosition > targetOrder.indexOf(bellToMove)) {
+      // Swap with the bell above
+      const bell1 = currentOrder[currentPosition - 1];
+      const bell2 = currentOrder[currentPosition];
+      const temp = bell1;
+      currentOrder[currentPosition - 1] = bell2;
+      currentOrder[currentPosition] = temp;
+      swaps.push([currentPosition - 1, currentPosition]);
+      console.log(`Swapping bell ${bell1} with bell ${bell2}`);
+    } else {
+      // Bell is above its target position, swap down
+      const bell1 = currentOrder[currentPosition];
+      const bell2 = currentOrder[currentPosition + 1];
+      const temp = bell1;
+      currentOrder[currentPosition] = bell2;
+      currentOrder[currentPosition + 1] = temp;
+      swaps.push([currentPosition, currentPosition + 1]);
+      console.log(`Swapping bell ${bell1} with bell ${bell2}`);
+    }
+
+    console.log('Order after swap:', currentOrder.join(','));
+    iterations++;
   }
 
-  // Helper function to sort and count inversions
-  function sortAndCount(arr, left, right, swaps) {
-    let invCount = 0;
-    if (left < right) {
-      const mid = Math.floor((left + right) / 2);
-      invCount += sortAndCount(arr, left, mid, swaps);
-      invCount += sortAndCount(arr, mid + 1, right, swaps);
-      invCount += mergeAndCount(arr, left, mid, right, swaps);
-    }
-    return invCount;
+  if (iterations >= maxIterations) {
+    console.log(`\nFinal state: ${JSON.stringify(currentOrder, null, 2)}`);
+    console.log(`Target state: ${JSON.stringify(targetOrder, null, 2)}`);
+    throw new Error('Maximum iterations reached without finding a solution');
   }
 
-  // Get the sequence of swaps needed
-  const swaps = [];
-  const workingArray = [...relativeOrder];
-  sortAndCount(workingArray, 0, n - 1, swaps);
-
-  // Generate the sequence of bell orders
-  const bellOrders = [sourceOrder.slice()];
-  let currentOrder = sourceOrder.slice();
-  const appliedSwaps = [];
-
-  // Apply each swap and track the resulting orders
-  for (const [i, j] of swaps) {
-    // Only apply the swap if it follows the "lower bell first" rule
-    if (currentOrder[i] < currentOrder[j]) {
-      // Store the actual bell numbers being swapped
-      appliedSwaps.push([currentOrder[i], currentOrder[j]]);
-      // Perform the swap
-      [currentOrder[i], currentOrder[j]] = [currentOrder[j], currentOrder[i]];
-      bellOrders.push(currentOrder.slice());
-    }
-  }
-
-  return {
-    swaps: appliedSwaps,
-    bellOrders: bellOrders,
-  };
+  return swaps;
 }
 
 /**
@@ -148,10 +145,52 @@ function findMinimumSwaps(
   return calculateMinimumSwaps(data.sourceOrder, data.targetOrder);
 }
 
-// Example usage:
-// const transitionData = createTransitionData(changeSequences);
-// const swaps = findMinimumSwaps(transitionData, 8, "Rounds", "Queens");
-// console.log(swaps); // [[2,3], [4,5], ...]
+// Helper function to check if arrays are equal
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+// Test cases
+function runTests() {
+  console.log('Running test cases...\n');
+
+  // Test case 1: Simple swap
+  console.log('Test Case 1: Simple swap');
+  console.log('Initial order: [1,2,3,4]');
+  console.log('Target order: [1,2,4,3]');
+  const source1 = [1, 2, 3, 4];
+  const target1 = [1, 2, 4, 3];
+  const swaps1 = calculateMinimumSwaps(source1, target1);
+  console.log(`\nTotal swaps: ${swaps1.length}`);
+  console.log(`Final swaps: ${JSON.stringify(swaps1)}\n`);
+
+  // Test case 2: Two bells need to move
+  console.log('Test Case 2: Two bells need to move');
+  console.log('Initial order: [1,2,3,4]');
+  console.log('Target order: [1,3,2,4]');
+  const source2 = [1, 2, 3, 4];
+  const target2 = [1, 3, 2, 4];
+  const swaps2 = calculateMinimumSwaps(source2, target2);
+  console.log(`\nTotal swaps: ${swaps2.length}`);
+  console.log(`Final swaps: ${JSON.stringify(swaps2)}\n`);
+
+  // Test case 3: Complete reversal
+  console.log('Test Case 3: Complete reversal');
+  console.log('Initial order: [1,2,3,4]');
+  console.log('Target order: [4,3,2,1]');
+  const source3 = [1, 2, 3, 4];
+  const target3 = [4, 3, 2, 1];
+  const swaps3 = calculateMinimumSwaps(source3, target3);
+  console.log(`\nTotal swaps: ${swaps3.length}`);
+  console.log(`Final swaps: ${JSON.stringify(swaps3)}\n`);
+}
+
+// Run the tests
+runTests();
 
 module.exports = {
   calculateMinimumSwaps,
