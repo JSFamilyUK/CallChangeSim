@@ -185,6 +185,19 @@ for (const [numBells, patterns] of Object.entries(transitionData)) {
             .slice(1)
             .map(order => order.join(''))
             .join('|'),
+          bellOrders_display: bellOrders
+            .slice(1)
+            .map(order =>
+              order
+                .map(bell => {
+                  if (bell === 10) return '0';
+                  if (bell === 11) return 'E';
+                  if (bell === 12) return 'T';
+                  return bell;
+                })
+                .join('')
+            )
+            .join('|'),
         });
       } catch (error) {
         console.error(

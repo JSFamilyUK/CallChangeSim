@@ -4213,14 +4213,11 @@
           currentCallingStyle === 'up'
             ? transition.swaps_display_up.split(', ')
             : transition.swaps_display_down.split(', ');
-        const bellOrders = transition.bellOrders.split('|');
+        const bellOrders = transition.bellOrders_display.split('|');
 
         // Format the sequence display
         const sequenceHtml = bellOrders
           .map((order, index) => {
-            // Convert string order to array of numbers
-            const orderArray = order.split('').map(convertDisplayToNumber);
-
             return `
             <div class="sequence-step">
               <span class="step-number">${index + 1}</span>
@@ -4229,9 +4226,7 @@
                   ? `<span class="step-swap">${swapsDisplay[index]}</span>`
                   : '<span class="step-swap"></span>'
               }
-              <span class="step-order">${orderArray
-                .map(convertBellNumberForDisplay)
-                .join('')}</span>
+              <span class="step-order">${order}</span>
             </div>
           `;
           })
