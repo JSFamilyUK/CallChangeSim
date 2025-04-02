@@ -4316,11 +4316,25 @@
       });
 
       function resetSequenceDisplay() {
+        // Reset sequence content
         const sequenceContent = document.getElementById('sequence-content');
         if (sequenceContent) {
-          // Reset any inline styles that might have been added
           sequenceContent.style.fontSize = '';
+          sequenceContent.style.lineHeight = '';
+          sequenceContent.style.maxWidth = '';
         }
+
+        // Reset reference box label
+        const referenceLabel = document.querySelector('.reference-box label');
+        if (referenceLabel) {
+          referenceLabel.style.fontSize = '';
+          referenceLabel.style.lineHeight = '';
+          referenceLabel.style.maxWidth = '';
+        }
+
+        // Force a reflow to ensure styles are recalculated
+        if (sequenceContent) sequenceContent.offsetHeight;
+        if (referenceLabel) referenceLabel.offsetHeight;
       }
     </script>
   </body>
