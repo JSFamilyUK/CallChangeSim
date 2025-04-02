@@ -1840,10 +1840,18 @@
           <!-- Calling Style Selection -->
           <div class="calling-style-selector">
             <div class="calling-style-buttons">
-              <button id="calling-up-btn" class="calling-style-btn active">
+              <button
+                id="calling-up-btn"
+                class="calling-style-btn active"
+                onclick="setCallingStyle(true)"
+              >
                 Calling Up
               </button>
-              <button id="calling-down-btn" class="calling-style-btn">
+              <button
+                id="calling-down-btn"
+                class="calling-style-btn"
+                onclick="setCallingStyle(false)"
+              >
                 Calling Down
               </button>
             </div>
@@ -3263,22 +3271,63 @@
       }
 
       function setCallingStyle(isCallingUp) {
+        // Update the global calling style
+        currentCallingStyle = isCallingUp ? 'up' : 'down';
+
+        // Update options box labels
         const callingUpLabel = document.getElementById('calling-up-label');
         const callingDownLabel = document.getElementById('calling-down-label');
-        const leadContainer = document.getElementById('lead-container');
-
-        // Update the label colors based on the selection
         callingUpLabel.style.color = isCallingUp ? '#007bff' : '#ccc';
         callingDownLabel.style.color = isCallingUp ? '#ccc' : '#007bff';
 
+        // Update reference box buttons
+        const upButton = document.getElementById('calling-up-btn');
+        const downButton = document.getElementById('calling-down-btn');
+
+        // First remove active class from both buttons
+        upButton.classList.remove('active');
+        downButton.classList.remove('active');
+
+        // Then add active class to the appropriate button
+        if (isCallingUp) {
+          upButton.classList.add('active');
+        } else {
+          downButton.classList.add('active');
+        }
+
         // Show/hide the Lead button based on calling style
+        const leadContainer = document.getElementById('lead-container');
         leadContainer.style.display = isCallingUp ? 'none' : 'block';
+
+        // Update sequence display
+        displaySequence();
       }
 
       function updateCallingStyle() {
         const isCallingUp = !document.getElementById('open-handstroke-toggle')
           .checked;
-        setCallingStyle(isCallingUp);
+        currentCallingStyle = isCallingUp ? 'up' : 'down';
+
+        // Update UI without calling setCallingStyle
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const callingDownLabel = document.getElementById('calling-down-label');
+        callingUpLabel.style.color = isCallingUp ? '#007bff' : '#ccc';
+        callingDownLabel.style.color = isCallingUp ? '#ccc' : '#007bff';
+
+        const upButton = document.getElementById('calling-up-btn');
+        const downButton = document.getElementById('calling-down-btn');
+        upButton.classList.remove('active');
+        downButton.classList.remove('active');
+        if (isCallingUp) {
+          upButton.classList.add('active');
+        } else {
+          downButton.classList.add('active');
+        }
+
+        const leadContainer = document.getElementById('lead-container');
+        leadContainer.style.display = isCallingUp ? 'none' : 'block';
+
+        displaySequence();
       }
 
       function updatePatternsDisplay(count) {
@@ -4033,6 +4082,66 @@
       // Add this with other global variables at the top
       let lastReferenceBellCount = 0;
 
+      // Add this function to sync calling style UI
+      function syncCallingStyleUI() {
+        // Get all calling style elements (both labels and buttons)
+        const upLabels = document.querySelectorAll('.calling-up-label');
+        const downLabels = document.querySelectorAll('.calling-down-label');
+        const upButtons = document.querySelectorAll('.calling-up-btn');
+        const downButtons = document.querySelectorAll('.calling-down-btn');
+
+        if (currentCallingStyle === 'up') {
+          // Update options box labels
+          upLabels.forEach(label => label.classList.add('active'));
+          downLabels.forEach(label => label.classList.remove('active'));
+
+          // Update reference box buttons
+          upButtons.forEach(btn => btn.classList.add('active'));
+          downButtons.forEach(btn => btn.classList.remove('active'));
+        } else {
+          // Update options box labels
+          upLabels.forEach(label => label.classList.remove('active'));
+          downLabels.forEach(label => label.classList.add('active'));
+
+          // Update reference box buttons
+          upButtons.forEach(btn => btn.classList.remove('active'));
+          downButtons.forEach(btn => btn.classList.add('active'));
+        }
+      }
+
+      // Update the event listeners for calling style elements
+      document.addEventListener('DOMContentLoaded', function () {
+        // Add click handlers to options box labels
+        document.querySelectorAll('.calling-up-label').forEach(label => {
+          label.addEventListener('click', function () {
+            setCallingStyle(true); // Use existing setCallingStyle function
+            syncCallingStyleUI();
+          });
+        });
+
+        document.querySelectorAll('.calling-down-label').forEach(label => {
+          label.addEventListener('click', function () {
+            setCallingStyle(false); // Use existing setCallingStyle function
+            syncCallingStyleUI();
+          });
+        });
+
+        // Add click handlers to reference box buttons
+        document.querySelectorAll('.calling-up-btn').forEach(button => {
+          button.addEventListener('click', function () {
+            setCallingStyle(true); // Use existing setCallingStyle function
+            syncCallingStyleUI();
+          });
+        });
+
+        document.querySelectorAll('.calling-down-btn').forEach(button => {
+          button.addEventListener('click', function () {
+            setCallingStyle(false); // Use existing setCallingStyle function
+            syncCallingStyleUI();
+          });
+        });
+      });
+
       function toggleReferenceBox() {
         const referenceBox = document.getElementById('reference-box');
         const overlay = document.getElementById('overlay');
@@ -4045,10 +4154,28 @@
           referenceBox.style.display = 'block';
           overlay.style.display = 'block';
 
-          // Only update if the simulator's bell count is different from the last reference bell count
+          // Only update patterns if the simulator's bell count is different
           if (numBells !== lastReferenceBellCount) {
             selectReferenceBell(numBells);
           }
+
+          // Update calling style buttons based on current style
+          const upButton = document.getElementById('calling-up-btn');
+          const downButton = document.getElementById('calling-down-btn');
+
+          // First remove active class from both buttons
+          upButton.classList.remove('active');
+          downButton.classList.remove('active');
+
+          // Then add active class to the appropriate button
+          if (currentCallingStyle === 'up') {
+            upButton.classList.add('active');
+          } else {
+            downButton.classList.add('active');
+          }
+
+          // Update sequence display
+          displaySequence();
         } else {
           // Close reference box
           referenceBox.style.display = 'none';
