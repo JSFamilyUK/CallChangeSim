@@ -1397,6 +1397,11 @@
       .reference-box label {
         font-size: 16px;
       }
+
+      .sequence-display #sequence-content p {
+        font-size: 16px;
+        margin: 0;
+      }
     </style>
   </head>
   <body>
@@ -1809,11 +1814,21 @@
         </div>
       </div>
       <div class="reference-bell-buttons" id="referenceBellButtons">
-        <button class="reference-bell-button">5 Bells</button>
-        <button class="reference-bell-button">6 Bells</button>
-        <button class="reference-bell-button">8 bells</button>
-        <button class="reference-bell-button">10 Bells</button>
-        <button class="reference-bell-button">12 Bells</button>
+        <button class="reference-bell-button" onclick="selectReferenceBell(5)">
+          5 Bells
+        </button>
+        <button class="reference-bell-button" onclick="selectReferenceBell(6)">
+          6 Bells
+        </button>
+        <button class="reference-bell-button" onclick="selectReferenceBell(8)">
+          8 bells
+        </button>
+        <button class="reference-bell-button" onclick="selectReferenceBell(10)">
+          10 Bells
+        </button>
+        <button class="reference-bell-button" onclick="selectReferenceBell(12)">
+          12 Bells
+        </button>
       </div>
       <label>Add changes below to see example call change sequences</label>
       <div class="reference-container" id="referenceDisplay"></div>
@@ -3989,58 +4004,79 @@
         roundsButton.style.display = isInRounds ? 'none' : 'inline-block';
       }
 
+      function updateReferencePatternDropdowns() {
+        const fromDropdown = document.getElementById('source-pattern-select');
+        const toDropdown = document.getElementById('target-pattern-select');
+
+        // Clear dropdowns
+        fromDropdown.innerHTML = '';
+        toDropdown.innerHTML = '';
+
+        // Add available patterns for current bell count
+        for (const pattern in patterns) {
+          if (patterns[pattern][referenceBellCount]) {
+            fromDropdown.innerHTML += `<option value="${pattern}">${pattern}</option>`;
+            toDropdown.innerHTML += `<option value="${pattern}">${pattern}</option>`;
+          }
+        }
+
+        // Set Rounds as default when bell count changes or on first open
+        if (
+          lastReferenceBellCount === 0 ||
+          lastReferenceBellCount !== referenceBellCount
+        ) {
+          fromDropdown.value = 'Rounds';
+          toDropdown.value = 'Rounds';
+        }
+      }
+
+      // Add this with other global variables at the top
+      let lastReferenceBellCount = 0;
+
       function toggleReferenceBox() {
         const referenceBox = document.getElementById('reference-box');
         const overlay = document.getElementById('overlay');
-        const pendingNotification = document.getElementById(
-          'pending-stand-notification'
-        );
 
         if (
           referenceBox.style.display === 'none' ||
           referenceBox.style.display === ''
         ) {
-          // If playback is active, set pending flag and trigger stop
-          if (isPlaying) {
-            pendingReferenceBoxOpen = true;
-            pendingStop = true;
-            const standButton = document.querySelector(
-              'button.bell-number-button[onclick="stopPlayback()"]'
-            );
-            standButton.classList.add('stopping');
-
-            // Show the pending notification
-            pendingNotification.style.display = 'block';
-            return;
-          }
-
+          // Open reference box
           referenceBox.style.display = 'block';
           overlay.style.display = 'block';
 
-          // Select the matching bell number button
-          selectReferenceBell(numBells);
+          // Only update if the simulator's bell count is different from the last reference bell count
+          if (numBells !== lastReferenceBellCount) {
+            selectReferenceBell(numBells);
+          }
         } else {
+          // Close reference box
           referenceBox.style.display = 'none';
           overlay.style.display = 'none';
-          // Reset scroll position when closing
-          referenceBox.scrollTop = 0;
-          pendingReferenceBoxOpen = false;
-          // Hide the pending notification
-          pendingNotification.style.display = 'none';
+          // Store the current reference bell count when closing
+          lastReferenceBellCount = referenceBellCount;
         }
       }
 
       function selectReferenceBell(count) {
-        referenceBellCount = count;
         // Update button styles
         const buttons = document.querySelectorAll('.reference-bell-button');
         buttons.forEach(button => {
+          button.classList.remove('selected');
           if (parseInt(button.textContent) === count) {
             button.classList.add('selected');
-          } else {
-            button.classList.remove('selected');
           }
         });
+
+        // Update patterns if the count has changed
+        if (referenceBellCount !== count) {
+          referenceBellCount = count;
+          updateReferencePatternDropdowns();
+
+          // Clear the sequence display when changing bell counts
+          const sequenceContent = document.getElementById('sequence-content');
+          sequenceContent.innerHTML = '<p>Choose two different patterns</p>';
+        }
       }
 
       // Add this to the playback completion handler in playSequence
@@ -4082,13 +4118,13 @@
         }
 
         // Handle pending reference box open
-        if (pendingReferenceBoxOpen) {
+        /*if (pendingReferenceBoxOpen) {
           pendingReferenceBoxOpen = false;
           // Hide the pending notification before opening the reference box
           document.getElementById('pending-stand-notification').style.display =
             'none';
           toggleReferenceBox();
-        }
+        }*/
 
         // Hide the pending stand notification when playback stops
         document.getElementById('pending-stand-notification').style.display =
