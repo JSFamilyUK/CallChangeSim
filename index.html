@@ -22,8 +22,11 @@
         background-color: #007bff;
         color: white;
         border: none;
+        min-width: 60px;
+        max-width: 200px;
+        width: auto;
+        flex: 1;
         white-space: nowrap;
-        flex-shrink: 0;
         transition: background-color 0.3s ease;
       }
 
@@ -664,12 +667,12 @@
       /* Add container for bell buttons */
       .bell-buttons-container {
         width: 100%;
-        max-width: 600px;
+        max-width: 450px;
         margin: 10px auto 0;
         padding-right: 20px;
         display: flex;
         justify-content: center;
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 5px;
       }
 
