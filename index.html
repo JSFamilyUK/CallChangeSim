@@ -4309,7 +4309,19 @@
             }
           });
         });
+
+        // Add orientation change and resize handlers
+        window.addEventListener('orientationchange', resetSequenceDisplay);
+        window.addEventListener('resize', resetSequenceDisplay);
       });
+
+      function resetSequenceDisplay() {
+        const sequenceContent = document.getElementById('sequence-content');
+        if (sequenceContent) {
+          // Reset any inline styles that might have been added
+          sequenceContent.style.fontSize = '';
+        }
+      }
     </script>
   </body>
 </html>
