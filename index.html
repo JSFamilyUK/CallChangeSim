@@ -1244,6 +1244,7 @@
         margin-top: 20px;
         text-align: left;
         flex-grow: 1;
+        font-size: 14px;
       }
 
       /* Reference bell buttons styling */
@@ -1390,6 +1391,10 @@
       .step-order {
         flex: 1;
         font-family: monospace;
+      }
+
+      .reference-box label {
+        font-size: 14px;
       }
     </style>
   </head>
@@ -4309,33 +4314,7 @@
             }
           });
         });
-
-        // Add orientation change and resize handlers
-        window.addEventListener('orientationchange', resetSequenceDisplay);
-        window.addEventListener('resize', resetSequenceDisplay);
       });
-
-      function resetSequenceDisplay() {
-        // Reset sequence content
-        const sequenceContent = document.getElementById('sequence-content');
-        if (sequenceContent) {
-          sequenceContent.style.fontSize = '';
-          sequenceContent.style.lineHeight = '';
-          sequenceContent.style.maxWidth = '';
-        }
-
-        // Reset reference box label
-        const referenceLabel = document.querySelector('.reference-box label');
-        if (referenceLabel) {
-          referenceLabel.style.fontSize = '';
-          referenceLabel.style.lineHeight = '';
-          referenceLabel.style.maxWidth = '';
-        }
-
-        // Force a reflow to ensure styles are recalculated
-        if (sequenceContent) sequenceContent.offsetHeight;
-        if (referenceLabel) referenceLabel.offsetHeight;
-      }
     </script>
   </body>
 </html>
