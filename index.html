@@ -1402,6 +1402,11 @@
         font-size: 16px;
         margin: 0;
       }
+
+      /* Add CSS for current order highlighting */
+      .sequence-step.current-order {
+        border: 2px solid #90ee90;
+      }
     </style>
   </head>
   <body>
@@ -4409,11 +4414,20 @@
             : transition.swaps_display_down.split(', ');
         const bellOrders = transition.bellOrders_display.split('|');
 
+        // Convert current order to display format for comparison
+        const currentOrderDisplay = currentOrder
+          .map(convertBellNumberForDisplay)
+          .join('');
+
         // Format the sequence display
         const sequenceHtml = bellOrders
           .map((order, index) => {
+            // Check if this order matches the current order
+            const isCurrentOrder = order === currentOrderDisplay;
+            const highlightClass = isCurrentOrder ? 'current-order' : '';
+
             return `
-            <div class="sequence-step">
+            <div class="sequence-step ${highlightClass}">
               <span class="step-number">${index + 1}</span>
               ${
                 index < swapsDisplay.length
@@ -4427,6 +4441,18 @@
           .join('');
 
         document.getElementById('sequence-content').innerHTML = sequenceHtml;
+
+        // Add CSS if it doesn't exist
+        if (!document.getElementById('sequence-highlight-style')) {
+          const style = document.createElement('style');
+          style.id = 'sequence-highlight-style';
+          style.textContent = `
+            .sequence-step.current-order {
+              border: 2px solid #90EE90;
+            }
+          `;
+          document.head.appendChild(style);
+        }
       }
 
       // Add event listeners
