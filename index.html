@@ -1444,6 +1444,16 @@
         </svg>
         <svg
           class="options-icon"
+          onclick="resetToSelectedPattern()"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle cx="12" cy="12" r="10" fill="#007bff" />
+          <circle cx="12" cy="12" r="7" fill="white" />
+          <circle cx="12" cy="12" r="3" fill="#007bff" />
+        </svg>
+        <svg
+          class="options-icon"
           id="options-icon"
           onclick="toggleOptionsBox()"
           viewBox="0 0 24 24"
@@ -1801,6 +1811,12 @@
       <div class="pending-content">
         <div class="pending-spinner"></div>
         <div class="pending-text">Resetting...</div>
+      </div>
+    </div>
+    <div class="pending-notification" id="pending-pattern-reset-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Resetting to Pattern...</div>
       </div>
     </div>
 
@@ -2679,16 +2695,33 @@
         // Handle any pending reset at the start of the function
         if (pendingReset) {
           switch (pendingReset) {
-            case 'bells':
-              // Reset bells to rounds order
-              currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
-              selectedBells = [];
-              updateDisplay();
-              updateHistory('Go!', currentOrder);
-              // Hide the pending pattern rounds notification
-              document.getElementById(
-                'pending-rounds-notification'
-              ).style.display = 'none';
+            case 'target':
+              const selectedPattern =
+                document.getElementById('pattern-dropdown').value;
+              if (
+                selectedPattern &&
+                selectedPattern !== 'Choose Desired Pattern'
+              ) {
+                // Get the pattern order for current number of bells
+                const patternOrder = patterns[selectedPattern]?.[numBells];
+                if (patternOrder) {
+                  // Check if current order already matches the pattern
+                  const currentOrderMatches = currentOrder.every(
+                    (bell, index) => bell === patternOrder[index]
+                  );
+                  if (!currentOrderMatches) {
+                    // Update current order to match pattern
+                    currentOrder = [...patternOrder];
+                    // Update display and history
+                    updateDisplay();
+                    updateHistory(`Jump!`, currentOrder);
+                  }
+                }
+                // Hide the pending pattern restart notification
+                document.getElementById(
+                  'pending-pattern-reset-notification'
+                ).style.display = 'none';
+              }
               break;
             case 'patterns':
               // Reset to first pattern in sequence without clearing the sequence
@@ -3533,6 +3566,13 @@
       }
 
       function confirmPatternSequence() {
+        // Hide the target icon when sequence starts
+        const targetIcon = document.querySelector(
+          '.options-icon[onclick="resetToSelectedPattern()"]'
+        );
+        if (targetIcon && patternSequence.length !== 1) {
+          targetIcon.style.display = 'none';
+        }
         if (patternSequence.length > 0) {
           // Get the currently selected bell count from the patterns dialog
           const selectedBellButton = document.querySelector(
@@ -3858,6 +3898,14 @@
         if (counter) {
           counter.remove();
         }
+
+        //Display the target icon
+        const targetIcon = document.querySelector(
+          '.options-icon[onclick="resetToSelectedPattern()"]'
+        );
+        if (targetIcon) {
+          targetIcon.style.display = 'block';
+        }
       }
 
       // Add pendingReset variable at the top with other global variables
@@ -4022,6 +4070,10 @@
           document.getElementById('pending-stand-notification').style.display =
             'none';
         }
+
+        // Handle pending target pattern jump
+
+        // End of pending target pattern jump code
 
         // Handle pending patterns box open
         if (pendingPatternsBoxOpen) {
@@ -4506,6 +4558,41 @@
           });
         });
       });
+
+      // Add this function to reset to selected pattern
+      function resetToSelectedPattern() {
+        const selectedPattern =
+          document.getElementById('pattern-dropdown').value;
+        if (selectedPattern && selectedPattern !== 'Choose Desired Pattern') {
+          // Get the pattern order for current number of bells
+          const patternOrder = patterns[selectedPattern]?.[numBells];
+          if (patternOrder) {
+            // Check if current order already matches the pattern
+            const currentOrderMatches = currentOrder.every(
+              (bell, index) => bell === patternOrder[index]
+            );
+            if (!currentOrderMatches) {
+              if (isPlaying) {
+                // If playback is active, queue the reset without stopping playback
+                pendingReset = 'target';
+                const notification = document.getElementById(
+                  'pending-pattern-reset-notification'
+                );
+                notification.querySelector(
+                  '.pending-text'
+                ).textContent = `${selectedPattern} !`;
+                notification.style.display = 'block';
+                return;
+              }
+              // Update current order to match pattern
+              currentOrder = [...patternOrder];
+              // Update display and history
+              updateDisplay();
+              updateHistory(`Jump`, currentOrder);
+            }
+          }
+        }
+      }
     </script>
   </body>
 </html>
