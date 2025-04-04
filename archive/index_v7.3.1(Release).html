@@ -1,0 +1,3894 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="favicon.jpg" />
+    <title>Call Change Simulator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 20px;
+      }
+
+      .bell-number-button {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 6px 8px;
+        margin: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.3s ease;
+      }
+
+      .bell-number-button:hover {
+        background-color: #0056b3;
+      }
+
+      .bell-number-button.selected {
+        background-color: #1f8126;
+        border: 1px solid #1f8126;
+        box-sizing: border-box;
+        pointer-events: none; /* Prevent clicking when selected */
+      }
+
+      .bell-number-button.stopping {
+        background-color: darkred;
+        pointer-events: none;
+      }
+
+      .bell-number-button.pending {
+        background-color: darkred;
+        pointer-events: none;
+      }
+
+      .bell-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 10px 0;
+      }
+
+      /* Style for the selection area container */
+      .selection-area-container {
+        background-color: #f8f9fa;
+        border: 1px solid #007bff;
+        border-radius: 15px;
+        padding: 5px 20px; /* Reduced top/bottom padding to 5px, kept left/right at 20px */
+        margin: 20px auto;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+        width: calc(
+          100% - 40px
+        ); /* Account for body margin (20px) on each side */
+        max-width: 560px; /* Reduced from 600px to account for body margins */
+      }
+
+      /* New style for selection area numbers */
+      .selection-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #888;
+        cursor: pointer;
+        transition: color 0.2s;
+        padding: 0;
+        min-width: 12px;
+        text-align: center;
+        box-sizing: border-box;
+        flex: 0 0 auto;
+      }
+
+      .selection-number.selected {
+        color: #007bff;
+      }
+
+      #selection {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 10px 0 20px 0;
+        flex-wrap: nowrap;
+        padding: 0 20px; /* Increased from 5px to 20px to maintain spacing from edges */
+        box-sizing: border-box;
+        width: 100%;
+        gap: min(
+          30px,
+          calc(
+            (100% - (var(--num-bells) * 12px) - 40px) / (var(--num-bells) - 1)
+          )
+        ); /* Adjusted for new 40px total padding */
+      }
+
+      /* Update the heading margin in the selection area */
+      .selection-area-container h2 {
+        margin: 5px 0 15px 0; /* Top: 5px, Right: 0, Bottom: 15px, Left: 0 */
+      }
+
+      /* Update error message margin */
+      #error-message {
+        color: darkred;
+        font-weight: bold;
+        margin: 10px;
+        min-height: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .bell {
+        width: 25px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #007bff;
+        background-color: white;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      #current-order .bell {
+        border-color: #007bff;
+      }
+
+      .bell.selected {
+        background-color: blue;
+        color: white;
+      }
+
+      .bell.highlight {
+        background-color: yellow; /* Highlight pending swap bells */
+      }
+      .bell.recent-swap {
+        border: 2px solid red !important;
+      }
+
+      .bell.matched {
+        background-color: lightgreen;
+      }
+
+      table {
+        margin: auto;
+        border-collapse: collapse;
+        width: auto;
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      tr.selected {
+        background-color: lightgray;
+      }
+
+      .current-pattern {
+        font-size: 20px;
+        min-height: 30px;
+        margin: 1px 5px;
+        color: darkred;
+      }
+
+      #pattern-dropdown {
+        font-size: 14px; /* Larger text */
+        font-weight: bold;
+        padding: 6px 8px; /* More padding */
+        margin: 5px; /* Space between buttons */
+        width: 200px;
+        border-radius: 8px; /* Rounded corners */
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        outline: none; /* Remove focus outline */
+      }
+
+      /* Ensures the info icon stays on the same line as the text */
+      .info-container {
+        display: inline-block;
+        position: relative;
+        margin-left: 8px; /* Space between text and icon */
+      }
+
+      /* Style for the help button */
+      .help-button {
+        font-size: 22px;
+        font-weight: bold;
+        color: #007bff;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        vertical-align: middle;
+        display: inline-flex;
+        align-items: center;
+        height: 24px;
+        line-height: 1;
+      }
+
+      .help-button:hover {
+        opacity: 0.8;
+      }
+
+      /* Centered info box styling */
+      .info-box {
+        display: none;
+        position: fixed; /* Ensures it stays in the center of the screen */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); /* Centers the box */
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 15px;
+        width: 300px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        text-align: left;
+      }
+
+      .info-box strong {
+        display: block;
+        margin-bottom: 20px;
+      }
+
+      /* Styles for the close button inside the info box */
+      .close-btn {
+        display: block;
+        margin-top: 10px;
+        padding: 5px 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      .info-box ul {
+        padding-left: 20px;
+        margin: 5px 0;
+      }
+
+      .info-box li {
+        font-size: 16px;
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 10px;
+      }
+
+      .info-box li svg {
+        flex-shrink: 0;
+        margin-right: 8px;
+        margin-top: 0;
+        width: 20px;
+        height: 20px;
+        vertical-align: top;
+      }
+
+      .info-box li span {
+        flex-grow: 1;
+        line-height: 1.4;
+      }
+
+      /* Image wrapper and positioning styles */
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .left-image {
+        position: absolute;
+        left: calc(50% - 150px); /* Position 125px left of center */
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .right-image {
+        position: absolute;
+        right: calc(50% - 150px); /* Position 125px right of center */
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .center-text {
+        flex-grow: 1; /* Takes up the remaining space */
+        text-align: center; /* Center the text */
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      /* Toggle container styling */
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 5px 0;
+      }
+
+      /* Label styling */
+      .toggle-label {
+        font-size: 16px;
+        font-weight: bold;
+        margin-right: 5px; /* Space between label and toggle */
+      }
+
+      /* Wrapper for the toggle switch */
+      .toggle-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 48px; /* Reduce width by 20% (60px * 0.8) */
+        height: 27.2px; /* Reduce height by 20% (34px * 0.8) */
+      }
+
+      /* Hide the checkbox input */
+      .toggle-wrapper input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      /* Slider styling */
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc; /* Default background */
+        transition: 0.4s;
+        border-radius: 34px; /* Rounded edges */
+      }
+
+      .slider:before {
+        position: absolute;
+        content: '';
+        height: 20.8px; /* Reduce height by 20% (26px * 0.8) */
+        width: 20.8px; /* Reduce width by 20% (26px * 0.8) */
+        left: 3.2px; /* Reduce left by 20% (4px * 0.8) */
+        bottom: 3.2px; /* Reduce bottom by 20% (4px * 0.8) */
+        background-color: white; /* Knob color */
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      /* When checkbox is checked, change background and move knob */
+      input:checked + .slider {
+        background-color: #007bff; /* Blue when active */
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(20.8px); /* Move knob to the right */
+      }
+
+      /* Patterns popup styling */
+      .patterns-box {
+        position: fixed;
+        top: 20px; /* Fixed distance from top */
+        left: 50%;
+        transform: translateX(-50%); /* Only translate horizontally */
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh; /* Changed to 80% of viewport height */
+        overflow-y: auto;
+        z-index: 1000;
+        display: none; /* Hide by default */
+        flex-direction: column;
+      }
+
+      .patterns-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .patterns-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .patterns-title {
+        margin: 0 0 15px 0;
+      }
+
+      .patterns-bell-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+        margin-bottom: 15px;
+      }
+
+      .patterns-container {
+        margin-top: 20px;
+        text-align: left;
+        flex-grow: 1;
+      }
+
+      .patterns-footer {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: center;
+        gap: 10px; /* Add gap between buttons */
+      }
+
+      .patterns-button {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 8px 16px;
+        margin: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+      }
+
+      .patterns-button:hover {
+        background-color: #0056b3;
+      }
+
+      .patterns-bell-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+      }
+
+      .pattern {
+        margin-bottom: 5px;
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        white-space: nowrap;
+        overflow-x: auto;
+        padding-right: 10px;
+        min-height: 35px;
+      }
+
+      .pattern-name {
+        font-weight: bold;
+        color: #333;
+        min-width: 150px;
+        flex-shrink: 0; /* Prevent name from shrinking */
+      }
+
+      .pattern-order {
+        font-family: monospace;
+        color: #555;
+        flex-grow: 1;
+        text-align: right;
+        font-size: 16px; /* Increase font size */
+        padding-left: 10px; /* Add some space between name and order */
+        white-space: nowrap; /* Keep numbers on one line */
+        overflow-x: auto; /* Allow horizontal scrolling if needed */
+      }
+
+      /* Options box styling */
+      .options-box {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        text-align: center; /* Center all content */
+      }
+
+      /* Options dialog content container */
+      .options-dialog-content {
+        margin-top: 20px;
+        text-align: center; /* Center all content */
+        padding-bottom: 10px;
+        display: flex;
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items horizontally */
+        gap: 0; /* Remove all space between options */
+      }
+
+      /* Icon container styling */
+      .options-container {
+        position: relative;
+        width: 320px;
+        margin: 0 auto;
+        text-align: right;
+        padding: 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        box-sizing: border-box;
+      }
+
+      /* Move toggle container styles to be more specific */
+      .options-dialog-content .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Center content */
+        margin: 5px 0;
+        padding: 5px 10px; /* Add horizontal padding */
+        border: 1px solid #eee;
+        border-radius: 5px;
+        width: auto; /* Change from 100% to auto */
+        min-width: 300px; /* Set a minimum width to give content more space */
+      }
+
+      .options-dialog-content .toggle-label {
+        font-size: 16px;
+        font-weight: bold;
+        margin-right: 10px; /* Reduce right margin */
+      }
+
+      .options-dialog-content .toggle-wrapper {
+        margin-left: 0; /* Remove auto margin */
+      }
+
+      /* Add cog icon styling */
+      .options-icon {
+        width: 25.6px; /* Reduced from 32px by 20% */
+        height: 25.6px; /* Reduced from 32px by 20% */
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        fill: #007bff;
+        display: inline-block; /* Change from block to inline-block */
+      }
+
+      .options-icon:hover {
+        opacity: 1;
+      }
+
+      /* Add container for title and options */
+      .header-container {
+        position: relative;
+        margin-bottom: 10px; /* Reduced from 20px to 10px */
+      }
+
+      .header-container h1 {
+        margin: 0; /* Remove default margin from h1 */
+      }
+
+      /* Add Lead button styling */
+      .lead-button {
+        width: 60px;
+        height: 32px;
+        border-radius: 8px;
+        border: 2px solid #007bff;
+        background-color: white;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+        background-color: #f0f0f0f0;
+        margin: 5px auto;
+        padding: 0;
+      }
+
+      .lead-button:hover {
+        background-color: #f0f0f0;
+      }
+
+      .lead-button.selected {
+        background-color: #007bff;
+        color: white;
+      }
+
+      /* Add overlay styling */
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.7
+        ); /* White background with 70% opacity */
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        z-index: 999;
+        pointer-events: auto; /* Make overlay clickable */
+      }
+
+      /* Update z-index for popup boxes to be above overlay */
+      .options-box,
+      .patterns-box,
+      .info-box {
+        z-index: 1000;
+        pointer-events: auto; /* Ensure popup boxes can receive clicks */
+      }
+
+      /* Add container for bell buttons */
+      .bell-buttons-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 10px auto 0;
+        padding-right: 20px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 5px;
+      }
+
+      /* Add splash screen styling */
+      .splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      .splash-screen.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .splash-screen img {
+        max-width: 400px;
+        height: auto;
+      }
+
+      a {
+        color: black;
+        text-decoration: none; /* no underline */
+      }
+
+      /* Pattern Sequence Dialog styling */
+      .pattern-sequence-box {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 90%;
+        height: 95%;
+        background: white;
+        color: black;
+        border: none;
+        border-radius: 0;
+        padding: 20px;
+        overflow-y: auto;
+        box-shadow: none;
+        z-index: 1001;
+      }
+
+      .pattern-sequence-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 0;
+        position: relative; /* Add back for absolute positioning of close icon */
+      }
+
+      .pattern-sequence-header .close-icon {
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+
+      .pattern-sequence-header .prompt {
+        color: #666;
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 5px;
+        margin-bottom: 0; /* Remove bottom margin */
+        text-align: center;
+      }
+
+      .pattern-sequence-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .pattern-sequence-available {
+        margin-top: 10px;
+      }
+
+      .pattern-sequence-available h3 {
+        margin-bottom: 5px;
+      }
+
+      .pattern-sequence-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 560px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 10px;
+        box-sizing: border-box;
+      }
+
+      .pattern-sequence-item {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        text-align: left;
+        background-color: #f9f9f9;
+        transition: all 0.2s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+      }
+
+      .pattern-sequence-item .sequence-number {
+        margin-left: auto;
+        padding-left: 8px;
+      }
+
+      .pattern-sequence-item:hover {
+        background-color: #f0f0f0;
+      }
+
+      .pattern-sequence-item.selected {
+        background-color: #e3f2fd;
+        border-color: #2196f3;
+        color: #1976d2;
+      }
+
+      .pattern-sequence-item .positions {
+        display: flex;
+        gap: 2px;
+        margin-left: 8px;
+      }
+
+      .pattern-sequence-item .position {
+        background: #2196f3;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: bold;
+        min-width: 24px;
+        text-align: center;
+        display: inline-block;
+      }
+
+      .pattern-sequence-confirm {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin: 15px 0 0 0; /* Remove top margin since placeholder handles spacing */
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        min-height: 40px;
+      }
+
+      .pattern-sequence-confirm:empty {
+        display: none;
+      }
+
+      .pattern-sequence-confirm-placeholder {
+        height: 40px;
+        display: block;
+        margin-top: 20px; /* Move margin to placeholder */
+      }
+
+      .pattern-sequence-confirm-placeholder:empty {
+        display: none;
+      }
+
+      #begin-sequence-button,
+      #undo-sequence-button {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 6px 8px;
+        margin: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        border: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-width: 120px; /* Set minimum width for both buttons */
+        width: 120px; /* Force same width for both buttons */
+      }
+
+      #begin-sequence-button {
+        background-color: #007bff;
+        color: white;
+      }
+
+      #begin-sequence-button:hover {
+        background-color: #007bff;
+      }
+
+      #undo-sequence-button {
+        background-color: darkred;
+        color: white;
+      }
+
+      #undo-sequence-button:hover {
+        background-color: darkred;
+      }
+
+      .pattern-sequence-container {
+        margin-bottom: 50px;
+      }
+
+      .pattern-sequence-controls {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .pattern-sequence-available {
+        border: 1px solid #007bff;
+        border-radius: 5px;
+        padding: 10px;
+      }
+
+      .pattern-sequence-list {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f9f9f9;
+      }
+
+      .pattern-sequence-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        margin: 4px 0;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .pattern-sequence-item.selected {
+        border: 2px solid #007bff;
+      }
+
+      .pattern-sequence-item:hover {
+        background: #e9ecef;
+      }
+
+      .pattern-sequence-item.selected:hover {
+        background: #f8f9fa;
+      }
+
+      .pattern-sequence-button {
+        padding: 6px 8px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.3s ease;
+      }
+
+      .pattern-sequence-button:hover {
+        background: #0056b3;
+      }
+
+      .pattern-sequence-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .pattern-sequence-counter {
+        color: #888;
+        font-size: 14px;
+        margin-top: 5px;
+        text-align: center;
+        width: 100%;
+      }
+
+      .pattern-sequence-confirm .pattern-sequence-button {
+        padding: 6px 8px;
+        font-size: 14px;
+        font-weight: bold;
+        background-color: #28a745;
+      }
+
+      .pattern-sequence-confirm .pattern-sequence-button:hover {
+        background-color: #218838;
+      }
+
+      .patterns-title-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 15px;
+      }
+
+      .patterns-title {
+        margin: 0;
+      }
+
+      .close-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .close-icon svg {
+        width: 24px;
+        height: 24px;
+        fill: #666;
+      }
+
+      .close-icon:hover svg {
+        fill: #333;
+      }
+
+      .patterns-bell-button {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 4px 8px;
+        margin: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+      }
+
+      .patterns-bell-button:hover {
+        background-color: #0056b3;
+      }
+
+      .patterns-bell-button.selected {
+        background-color: #1f8126;
+        border: 1px solid #1f8126;
+        pointer-events: none;
+      }
+
+      .patterns-bell-button.pending {
+        background-color: darkred;
+        pointer-events: none;
+      }
+
+      /* Reset Options Dialog styling */
+      .reset-options-box {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        text-align: left;
+      }
+
+      .reset-options-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .reset-options-content {
+        margin-top: 20px;
+        text-align: center; /* Center all content */
+        padding-bottom: 10px;
+        display: flex;
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items horizontally */
+        gap: 0; /* Remove all space between options */
+      }
+
+      .reset-options-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .reset-options-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        margin: 4px 0;
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .reset-options-item.selected {
+        border: 2px solid #007bff;
+      }
+
+      .reset-options-item:hover {
+        background: #e9ecef;
+      }
+
+      .reset-options-item.selected:hover {
+        background: #f8f9fa;
+      }
+
+      .reset-options-button {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .reset-options-button:hover {
+        background-color: #0056b3;
+      }
+
+      .reset-options-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      /* Reset Options Menu styling */
+      .reset-options-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #007bff;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        min-width: 150px;
+        margin-top: 5px;
+        text-align: left;
+      }
+
+      .reset-options-menu::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: 10px;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid #007bff;
+      }
+
+      .reset-options-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        color: #007bff;
+        transition: background-color 0.2s;
+        white-space: nowrap;
+      }
+
+      .reset-options-item:hover {
+        background-color: #f0f0f0;
+      }
+
+      .reset-options-item:first-child {
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+      }
+
+      .reset-options-item:last-child {
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 4px;
+      }
+
+      /* Pattern Sequence Counter styling */
+      .pattern-sequence-counter {
+        margin-top: 5px;
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      .pattern-sequence-counter a {
+        color: #666;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .pattern-sequence-counter a:hover {
+        text-decoration: underline;
+      }
+
+      .sequence-popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 20px;
+        border: 3px solid #007bff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        z-index: 1002;
+        min-width: 300px;
+      }
+
+      .sequence-popup ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .sequence-popup li {
+        padding: 8px 0;
+        color: #666;
+      }
+
+      .sequence-popup li.current {
+        color: #28a745;
+        font-weight: bold;
+      }
+
+      .sequence-popup-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1001;
+      }
+
+      .sequence-popup h3 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-size: 1.2em;
+      }
+
+      .sequence-popup li {
+        padding: 8px 0;
+        color: #666;
+        display: flex;
+        align-items: center;
+      }
+
+      .sequence-popup li::before {
+        content: attr(data-number);
+        margin-right: 10px;
+        color: #999;
+        font-weight: bold;
+      }
+
+      .sequence-popup li.current {
+        color: #28a745;
+        font-weight: bold;
+      }
+
+      .help-icon {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        vertical-align: top;
+        cursor: pointer;
+        margin-left: 8px;
+        height: 24px;
+      }
+
+      .help-icon i {
+        font-size: 18px;
+        color: #666;
+        line-height: 1;
+      }
+
+      /* Add styles for pending notification */
+      .pending-notification {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        z-index: 1000;
+      }
+
+      .pending-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .pending-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .pending-text {
+        font-size: 14px;
+        white-space: nowrap;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Add splash screen div -->
+    <div class="splash-screen">
+      <img src="logo.jpg" alt="Call Change Simulator Logo" />
+    </div>
+    <!-- Original body content starts here -->
+    <!-- Add overlay div at the start of body -->
+    <div class="overlay" id="overlay"></div>
+    <div class="header-container">
+      <h1>Call Change Simulator</h1>
+    </div>
+    <div class="options-container">
+      <svg
+        class="options-icon"
+        onclick="togglePatternsBox()"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
+        />
+      </svg>
+      <svg
+        class="options-icon"
+        id="options-icon"
+        onclick="toggleOptionsBox()"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"
+        />
+      </svg>
+      <div style="position: relative">
+        <svg
+          class="options-icon"
+          onclick="toggleResetOptions()"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+          />
+        </svg>
+        <div class="reset-options-menu" id="reset-options-menu"></div>
+      </div>
+      <button class="help-button" onclick="toggleInfoBox()">?</button>
+    </div>
+    <div class="bell-buttons-container">
+      <button class="bell-number-button" onclick="setBells(5)">5 Bells</button>
+      <button class="bell-number-button" onclick="setBells(6)">6 Bells</button>
+      <button class="bell-number-button" onclick="setBells(8)">8 Bells</button>
+      <button class="bell-number-button" onclick="setBells(10)">
+        10 Bells
+      </button>
+      <button class="bell-number-button" onclick="setBells(12)">
+        12 Bells
+      </button>
+    </div>
+    <h4 style="font-weight: normal; font-size: 0.9em">
+      <img
+        src="bell_recent_swap.jpg"
+        alt="Icon"
+        style="height: 1.5em; vertical-align: middle; border: none"
+      />
+      = Recently Swapped
+      <img
+        src="bell_correct_position.jpg"
+        alt="Icon"
+        style="
+          height: 1.5em;
+          vertical-align: middle;
+          border: none;
+          margin-left: 20px;
+        "
+      />
+      = Correct Position
+    </h4>
+    <div id="current-order" class="bell-container"></div>
+    <div id="pattern" class="current-pattern"></div>
+    <select id="pattern-dropdown" onchange="updatePatternHighlighting()">
+      <option value="Choose Desired Pattern">Choose Desired Pattern</option>
+    </select>
+    <button
+      class="bell-number-button"
+      id="rounds-button"
+      onclick="resetBells()"
+      style="display: none"
+    >
+      Rounds
+    </button>
+    <button class="bell-number-button" id="go-button" onclick="startPlayback()">
+      Go
+    </button>
+    <button class="bell-number-button" onclick="stopPlayback()">Stand</button>
+    <div class="selection-area-container">
+      <h2 style="text-align: center; font-weight: normal">
+        Select Bells to Swap
+      </h2>
+      <div id="selection" class="bell-container"></div>
+      <div id="lead-container" style="display: none">
+        <div class="lead-button" onclick="handleLeadBell()">Lead</div>
+      </div>
+      <div
+        id="error-message"
+        style="
+          color: darkred;
+          font-weight: bold;
+          margin: 10px;
+          min-height: 20px;
+        "
+      ></div>
+    </div>
+    <h2 style="font-weight: normal">Previous Changes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Changes</th>
+          <th>Bell Order</th>
+          <th>Pattern</th>
+        </tr>
+      </thead>
+      <tbody id="history-table"></tbody>
+    </table>
+    <div>&nbsp;</div>
+    <br />
+    <div class="bell-container">&nbsp;</div>
+
+    <!-- Options Box -->
+    <div class="options-box" id="options-box">
+      <div class="options-header">
+        <div class="patterns-title-container">
+          <h2 class="patterns-title">Options</h2>
+          <button class="close-icon" onclick="toggleOptionsBox()">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="options-dialog-content">
+        <div class="toggle-container" style="justify-content: center">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span
+              id="calling-up-label"
+              style="font-weight: bold; color: #007bff; cursor: pointer"
+              onclick="setCallingStyle(true)"
+              >Call Up</span
+            >
+            <span style="color: #ccc">|</span>
+            <span
+              id="calling-down-label"
+              style="font-weight: bold; color: #ccc; cursor: pointer"
+              onclick="setCallingStyle(false)"
+              >Call Down</span
+            >
+          </div>
+        </div>
+        <div class="toggle-container">
+          <label class="toggle-label">Open Handstroke:</label>
+          <label class="toggle-wrapper">
+            <input type="checkbox" id="open-handstroke-toggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-container">
+          <label class="toggle-label">Offline Mode (Tones not Bells):</label>
+          <label class="toggle-wrapper">
+            <input type="checkbox" id="offline-mode-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-container">
+          <label class="toggle-label">Spatial Bell Sounds:</label>
+          <label class="toggle-wrapper">
+            <input type="checkbox" id="spatial-sound-toggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patterns Box -->
+    <div class="patterns-box" id="patterns-box">
+      <div class="patterns-header">
+        <div class="patterns-title-container">
+          <h2 class="patterns-title">Call Change Patterns</h2>
+          <button class="close-icon" onclick="togglePatternsBox()">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="patterns-bell-buttons">
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(5)"
+          >
+            5 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(6)"
+          >
+            6 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(8)"
+          >
+            8 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(10)"
+          >
+            10 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="filterPatternsByBells(12)"
+          >
+            12 Bells
+          </button>
+        </div>
+        <div class="patterns-controls">
+          <button class="patterns-button" onclick="openPatternSequenceDialog()">
+            Custom Call Change Sequence
+          </button>
+        </div>
+      </div>
+      <div class="patterns-container" id="patternsDisplay"></div>
+    </div>
+
+    <!-- Info Box (Centered) -->
+    <div class="info-box" id="info-box">
+      <strong>How to Use the Simulator:</strong>
+      <ul>
+        <li>
+          <svg
+            class="options-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="opacity: 0.7"
+          >
+            <path
+              d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
+            />
+          </svg>
+          <span
+            >The Patterns icon is used to view and select common patterns on
+            your chosen number of bells</span
+          >
+        </li>
+        <li>
+          <svg
+            class="options-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="opacity: 0.7"
+          >
+            <path
+              d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"
+            />
+          </svg>
+          <span>
+            The Options icon is used to choose your calling style, whether you
+            want a Handstroke Gap and other playback options
+          </span>
+        </li>
+        <li>
+          <svg
+            class="options-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="opacity: 0.7"
+          >
+            <path
+              d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+            />
+          </svg>
+          <span>
+            The Reset icon moves the bells back to their default order and
+            clears the change history
+          </span>
+        </li>
+        <li>Practice with or without the bells playing</li>
+        <li>
+          Select offline mode to use tones instead of bell sounds when there's
+          no signal
+        </li>
+        <li>Bells 10, 11 and 12 are represented by 0, E and T respectively</li>
+        <li>Calling errors will be displayed on the screen</li>
+        <li>If there's no sound, check your phone isn't in silent mode</li>
+      </ul>
+      <button class="close-btn" onclick="toggleInfoBox()">Close</button>
+    </div>
+
+    <div class="image-wrapper">
+      <br />
+      <span class="center-text"
+        >v7.3.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+          >contact@callchangesim.co.uk</a
+        ></span
+      >
+    </div>
+
+    <!-- Pattern Sequence Dialog -->
+    <div class="pattern-sequence-box" id="pattern-sequence-box">
+      <div class="pattern-sequence-header">
+        <div class="patterns-title-container">
+          <button class="close-icon" onclick="closePatternSequenceDialog()">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="pattern-sequence-content">
+        <div class="pattern-sequence-confirm-placeholder"></div>
+        <div class="pattern-sequence-confirm">
+          <button
+            class="pattern-sequence-button"
+            id="begin-sequence-button"
+            onclick="confirmPatternSequence()"
+          >
+            Start Sequence
+          </button>
+          <button
+            class="pattern-sequence-button"
+            id="undo-sequence-button"
+            onclick="undoLastPattern()"
+          >
+            Undo
+          </button>
+        </div>
+        <div class="prompt">
+          Select the patterns in the order you want to ring them
+        </div>
+        <div class="pattern-sequence-available">
+          <div class="pattern-sequence-grid" id="available-patterns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset Options Dialog -->
+    <div class="reset-options-box" id="reset-options-box">
+      <div class="reset-options-header">
+        <div class="patterns-title-container">
+          <h2 class="patterns-title">Reset Options</h2>
+          <button class="close-icon" onclick="closeResetOptionsDialog()">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="reset-options-content">
+        <div id="reset-options-list"></div>
+      </div>
+    </div>
+
+    <div class="sequence-popup-overlay"></div>
+    <div class="sequence-popup">
+      <h3>Custom Call Change Sequence</h3>
+      <ul id="sequence-list"></ul>
+    </div>
+
+    <!-- Add pending notification overlay -->
+    <div class="pending-notification" id="pending-stand-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Stand !</div>
+      </div>
+    </div>
+    <div class="pending-notification" id="pending-pattern-restart-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Restarting the Pattern...</div>
+      </div>
+    </div>
+    <div class="pending-notification" id="pending-rounds-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Rounds !</div>
+      </div>
+    </div>
+    <div class="pending-notification" id="pending-full-reset-notification">
+      <div class="pending-content">
+        <div class="pending-spinner"></div>
+        <div class="pending-text">Resetting...</div>
+      </div>
+    </div>
+
+    <script>
+      // Splash screen handling
+      document.addEventListener('DOMContentLoaded', function () {
+        const splashScreen = document.querySelector('.splash-screen');
+
+        // Wait for 2.5 seconds then fade out
+        setTimeout(() => {
+          splashScreen.classList.add('fade-out');
+
+          // Remove the splash screen from DOM after fade animation completes
+          setTimeout(() => {
+            splashScreen.remove();
+          }, 500); // Match this with the CSS transition duration
+        }, 2500);
+      });
+
+      /*********************** Core Variables & Pattern Data ************************/
+      let numBells = 6;
+      let currentOrder = [];
+      let selectedBells = []; // Bells selected by the user for swap
+      let history = [];
+      let pendingBellCount = null; // Store pending bell count change
+      let pendingPattern = null; // Add this at the top with other global variables
+      let pendingLead = null; // Add this with other global variables at the top
+      let patternSequence = []; // Array to store the pattern sequence
+      let currentPatternIndex = 0; // Index of current pattern in sequence
+      let selectedAvailablePattern = null; // Currently selected pattern in available list
+      let selectedSequencePattern = null; // Currently selected pattern in sequence list
+      let selectedPattern = null; // Clear the selected pattern
+      let pendingPatternsBoxOpen = false; // Add this with other global variables
+
+      // Helper function to convert bell numbers for display
+      function convertBellNumberForDisplay(num) {
+        if (num === 10) return '0';
+        if (num === 11) return 'E';
+        if (num === 12) return 'T';
+        return num.toString();
+      }
+
+      // Helper function to convert display back to number
+      function convertDisplayToNumber(display) {
+        if (display === '0') return 10;
+        if (display === 'E') return 11;
+        if (display === 'T') return 12;
+        return parseInt(display);
+      }
+
+      const patterns = {
+        Rounds: {
+          5: [1, 2, 3, 4, 5],
+          6: [1, 2, 3, 4, 5, 6],
+          8: [1, 2, 3, 4, 5, 6, 7, 8],
+          10: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          12: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        },
+        'Back Rounds': {
+          5: [4, 3, 2, 1, 5],
+          6: [5, 4, 3, 2, 1, 6],
+          8: [7, 6, 5, 4, 3, 2, 1, 8],
+          10: [9, 8, 7, 6, 5, 4, 3, 2, 1, 10],
+          12: [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 12],
+        },
+        'Roller Coaster': {
+          8: [1, 4, 3, 2, 7, 6, 5, 8],
+          10: [3, 2, 1, 6, 5, 4, 9, 8, 7, 10],
+        },
+        Queens: {
+          5: [2, 4, 1, 3, 5],
+          6: [1, 3, 5, 2, 4, 6],
+          8: [1, 3, 5, 7, 2, 4, 6, 8],
+          10: [1, 3, 5, 7, 9, 2, 4, 6, 8, 10],
+          12: [1, 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 12],
+        },
+        Kings: {
+          5: [3, 1, 2, 4, 5],
+          6: [5, 3, 1, 2, 4, 6],
+          8: [7, 5, 3, 1, 2, 4, 6, 8],
+          10: [9, 7, 5, 3, 1, 2, 4, 6, 8, 10],
+          12: [11, 9, 7, 5, 3, 1, 2, 4, 6, 8, 10, 12],
+        },
+        Tittums: {
+          5: [3, 1, 4, 2, 5],
+          6: [1, 4, 2, 5, 3, 6],
+          8: [1, 5, 2, 6, 3, 7, 4, 8],
+          10: [1, 6, 2, 7, 3, 8, 4, 9, 5, 10],
+          12: [1, 7, 2, 8, 3, 9, 4, 10, 5, 11, 6, 12],
+        },
+        'Exploding Tittums': {
+          6: [3, 4, 2, 5, 1, 6],
+          8: [4, 5, 3, 6, 2, 7, 1, 8],
+          10: [5, 6, 4, 7, 3, 8, 2, 9, 1, 10],
+          12: [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12],
+        },
+        Weasels: { 5: [1, 4, 2, 3, 5] },
+        Whittingtons: {
+          8: [1, 2, 7, 5, 3, 4, 6, 8],
+          12: [5, 3, 1, 2, 4, 6, 11, 9, 7, 8, 10, 12],
+        },
+        Hagdyke: {
+          6: [3, 4, 1, 2, 5, 6],
+          8: [1, 2, 5, 6, 3, 4, 7, 8],
+          10: [3, 4, 1, 2, 7, 8, 5, 6, 9, 10],
+          12: [1, 2, 5, 6, 3, 4, 9, 10, 7, 8, 11, 12],
+        },
+        Princes: {
+          6: [5, 3, 2, 1, 4, 6],
+          8: [7, 5, 3, 2, 1, 4, 6, 8],
+          10: [9, 7, 5, 3, 2, 1, 4, 6, 8, 10],
+          12: [11, 9, 7, 5, 3, 2, 1, 4, 6, 8, 10, 12],
+        },
+      };
+
+      /*********************** Display & History Functions ************************/
+      function toggleInfoBox() {
+        const infoBox = document.getElementById('info-box');
+        const overlay = document.getElementById('overlay');
+        if (infoBox.style.display === 'none' || infoBox.style.display === '') {
+          infoBox.style.display = 'block';
+          overlay.style.display = 'block';
+        } else {
+          infoBox.style.display = 'none';
+          overlay.style.display = 'none';
+        }
+      }
+
+      // Close when clicking outside the box
+      document.addEventListener('DOMContentLoaded', function () {
+        const infoBox = document.getElementById('info-box');
+        const infoIcon = document.querySelector('.info-icon');
+
+        if (infoBox && infoIcon) {
+          document.addEventListener('click', function (event) {
+            if (
+              !infoBox.contains(event.target) &&
+              !infoIcon.contains(event.target)
+            ) {
+              infoBox.style.display = 'none';
+            }
+          });
+        }
+      });
+
+      function setBells(count, isInitialLoad = false) {
+        // Clear pattern sequence and update UI regardless of playback state
+        patternSequence = [];
+        currentPatternIndex = 0;
+        selectedSequencePattern = null;
+        selectedPattern = null; // Clear the selected pattern
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+
+        // Clear the error message div (which contains the pattern order prompt)
+        const errorMessageDiv = document.getElementById('error-message');
+        errorMessageDiv.innerHTML = '';
+
+        // Reset the pattern dropdown to default
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
+        if (isPlaying) {
+          // If playback is active, queue the bell count change
+          pendingBellCount = count;
+
+          // Add pending state to current bell number button
+          document.querySelectorAll('.bell-number-button').forEach(button => {
+            const buttonCount = parseInt(button.textContent);
+            if (!isNaN(buttonCount)) {
+              if (buttonCount === numBells) {
+                button.classList.remove('selected');
+                button.classList.add('pending');
+              } else if (buttonCount === count) {
+                button.classList.add('selected');
+              }
+            }
+          });
+
+          // Show the pending stand notification
+          document.getElementById('pending-stand-notification').style.display =
+            'flex';
+
+          // Add pending state to current pattern dialog bell button
+          const patternsBox = document.getElementById('patterns-box');
+          if (patternsBox) {
+            // Show patterns box temporarily to ensure buttons are in DOM
+            const originalDisplay = patternsBox.style.display;
+            patternsBox.style.display = 'block';
+
+            document
+              .querySelectorAll('.patterns-bell-button')
+              .forEach(button => {
+                const buttonCount = parseInt(button.textContent);
+                if (!isNaN(buttonCount)) {
+                  if (buttonCount === numBells) {
+                    button.classList.remove('selected');
+                    button.classList.add('pending');
+                  } else if (buttonCount === count) {
+                    button.classList.add('selected');
+                  }
+                }
+              });
+
+            // Restore original display state
+            patternsBox.style.display = originalDisplay;
+          }
+
+          stopPlayback();
+          return;
+        }
+
+        // Only reset everything if this is not the initial load
+        if (!isInitialLoad) {
+          resetEverything();
+        }
+
+        numBells = count;
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+        history = [];
+        updateHistory('Go!', currentOrder);
+        updateDisplay();
+
+        // Set the CSS variable for number of bells
+        document
+          .getElementById('selection')
+          .style.setProperty('--num-bells', count);
+
+        // Update selected state of bell number buttons
+        document.querySelectorAll('.bell-number-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          if (!isNaN(buttonCount)) {
+            // Only toggle if it's a bell number button
+            button.classList.toggle('selected', buttonCount === count);
+            button.classList.remove('pending');
+          }
+        });
+
+        // Update selected state of pattern dialog bell buttons
+        document.querySelectorAll('.patterns-bell-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          if (!isNaN(buttonCount)) {
+            button.classList.toggle('selected', buttonCount === count);
+            button.classList.remove('pending');
+          }
+        });
+
+        // Update the patterns list for the new number of bells
+        displayPatterns(count);
+
+        updatePatternDropdown();
+
+        // Apply any pending pattern after bell count change
+        if (pendingPattern) {
+          applyPattern(pendingPattern);
+          pendingPattern = null;
+        }
+      }
+
+      function applyBellCount(count) {
+        setBells(count, true);
+      }
+
+      function updatePatternDropdown() {
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.innerHTML =
+          '<option value="Choose Desired Pattern">Choose Desired Pattern</option>';
+        for (const pattern in patterns) {
+          if (patterns[pattern][numBells]) {
+            dropdown.innerHTML += `<option value="${pattern}">${pattern}</option>`;
+          }
+        }
+      }
+
+      function updateDisplay() {
+        // Update the current order display using the helper function for conversion
+        document.getElementById('current-order').innerHTML = currentOrder
+          .map(n => `<div class="bell">${convertBellNumberForDisplay(n)}</div>`)
+          .join('');
+
+        // Update the bell selection area with new number-only format (no conversion)
+        const selectionContainer = document.getElementById('selection');
+        const numBells = currentOrder.length;
+
+        // Create the HTML with space-between layout
+        selectionContainer.innerHTML = Array.from(
+          { length: numBells },
+          (_, i) => i + 1
+        )
+          .map(
+            n =>
+              `<div id="bell-${n}" class="selection-number" onclick="selectBell(${n})">${n}</div>`
+          )
+          .join('');
+
+        updatePattern();
+
+        // Update button visibility
+        updateButtonVisibility();
+      }
+
+      function updatePattern() {
+        let foundPattern = '';
+        for (const [name, pattern] of Object.entries(patterns)) {
+          if (
+            JSON.stringify(pattern[numBells]) === JSON.stringify(currentOrder)
+          ) {
+            foundPattern = `- ${name} -`;
+            break;
+          }
+        }
+        document.getElementById('pattern').innerText = foundPattern;
+        updatePatternHighlighting();
+      }
+
+      function updatePatternHighlighting() {
+        const selectedPattern =
+          document.getElementById('pattern-dropdown').value;
+        const matchOrder = patterns[selectedPattern]?.[numBells] || [];
+
+        // Display the selected pattern's bell order in the error-message area
+        const errorMessageDiv = document.getElementById('error-message');
+        if (selectedPattern !== 'Choose Desired Pattern') {
+          errorMessageDiv.style.color = '#888';
+          // Add pattern name prefix to the bell order
+          const displayName =
+            selectedPattern === 'Exploding Tittums'
+              ? 'Exp. Tittums'
+              : selectedPattern;
+          errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+            .map(convertBellNumberForDisplay)
+            .join(' ')}`;
+
+          // Check if current order matches the pattern
+          const isMatch =
+            JSON.stringify(matchOrder) === JSON.stringify(currentOrder);
+          if (isMatch && patternSequence.length > 1) {
+            currentPatternIndex++;
+            if (currentPatternIndex < patternSequence.length) {
+              setTimeout(() => {
+                applyPattern(patternSequence[currentPatternIndex]);
+                updatePatternSequenceCounter();
+              }, 1000);
+            } else {
+              // Reset to first pattern in sequence
+              currentPatternIndex = 0;
+              setTimeout(() => {
+                applyPattern(patternSequence[0]);
+                updatePatternSequenceCounter();
+              }, 1000);
+            }
+          }
+        } else {
+          errorMessageDiv.innerHTML = '';
+        }
+
+        // Always update the counter if we have a sequence
+        if (patternSequence.length > 1) {
+          updatePatternSequenceCounter();
+        }
+
+        // Highlight matching bells in the current order
+        document
+          .querySelectorAll('#current-order .bell')
+          .forEach((bell, index) => {
+            const displayedValue = bell.innerText;
+            const actualNum = convertDisplayToNumber(displayedValue);
+            bell.classList.toggle(
+              'matched',
+              selectedPattern !== 'Choose Desired Pattern' &&
+                matchOrder[index] === actualNum
+            );
+          });
+      }
+
+      function updateHistory(change, order) {
+        // Determine if the current order matches any predefined pattern
+        let matchedPattern = '';
+        for (const [name, pattern] of Object.entries(patterns)) {
+          if (JSON.stringify(pattern[numBells]) === JSON.stringify(order)) {
+            matchedPattern =
+              name === 'Exploding Tittums' ? 'Exp. Tittums' : name; // Convert name for display
+            break;
+          }
+        }
+
+        // Add the change, order, and matched pattern to history
+        history.unshift({ change, order: [...order], pattern: matchedPattern });
+
+        // Update the history table
+        const table = document.getElementById('history-table');
+        table.innerHTML = history
+          .map(
+            h =>
+              `<tr onclick="applyHistory('${h.order.join(' ')}')">
+                    <td>${h.change}</td>
+                    <td>${h.order
+                      .map(convertBellNumberForDisplay)
+                      .join('')}</td>
+                    <td>${
+                      h.pattern || ''
+                    }</td> <!-- Display matched pattern or '' -->
+                </tr>`
+          )
+          .join('');
+      }
+
+      function applyHistory(orderString) {
+        currentOrder = orderString.split(' ').map(convertDisplayToNumber);
+        updateDisplay();
+      }
+
+      /*********************** Bell Selection & Swap Functions ************************/
+      function selectBell(num) {
+        // If a pending swap is already queued, ignore further selections.
+        if (pendingSwap) return;
+        if (selectedBells.includes(num)) {
+          // Remove the bell from selection if it's already selected.
+          selectedBells = selectedBells.filter(n => n !== num);
+        } else {
+          selectedBells.push(num);
+          if (selectedBells.length === 2) {
+            validateSelection();
+          }
+        }
+        updateSelectionDisplay();
+      }
+
+      function updateSelectionDisplay() {
+        document
+          .querySelectorAll('#selection .selection-number')
+          .forEach(number => {
+            const n = parseInt(number.innerText);
+            if (selectedBells.includes(n)) {
+              number.classList.add('selected');
+            } else {
+              number.classList.remove('selected');
+            }
+          });
+      }
+
+      function validateSelection() {
+        const errorMessageDiv = document.getElementById('error-message');
+        const [first, second] = selectedBells;
+        const firstIndex = currentOrder.indexOf(first);
+        const secondIndex = currentOrder.indexOf(second);
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+
+        if (isCallingUp) {
+          // When calling up, check for adjacent bells
+          if (Math.abs(firstIndex - secondIndex) !== 1) {
+            showError('You can only swap adjacent bells');
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+
+          // When calling up, first bell must be earlier than second
+          if (secondIndex < firstIndex) {
+            showError('Select bells in ascending order');
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+        } else {
+          // When calling down, prevent selecting second bell followed by first bell
+          if (firstIndex === 1 && secondIndex === 0) {
+            showError(
+              'Use the Lead button to move the bell in 2nds place into lead'
+            );
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+
+          // When calling down, first bell must be later in the change than the second
+          if (firstIndex < secondIndex) {
+            showError('Select bells in descending order');
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+
+          // When calling down, second bell must be two positions earlier than first
+          if (firstIndex - secondIndex !== 2) {
+            showError(
+              `Bell ${first} must follow Bell ${currentOrder[firstIndex - 2]}`
+            );
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+        }
+
+        // Valid selection: highlight these bells and…
+        highlightSwappedBells(first, second);
+        if (isPlaying) {
+          // If playback is active, queue the swap and keep the highlight.
+          pendingSwap = [first, second];
+        } else {
+          // If not playing, swap immediately with isFromPlayback=false
+          swapBells(first, second, false);
+        }
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+        const counter = document.getElementById('pattern-sequence-counter');
+
+        // Save current bell order text to restore later
+        const currentBellOrder = errorDiv.innerText;
+
+        // Display error message in red
+        errorDiv.style.color = 'darkred';
+        errorDiv.innerHTML = message;
+        if (counter) {
+          errorDiv.appendChild(counter);
+        }
+
+        // Restore bell order after 3 seconds
+        setTimeout(() => {
+          const selectedPattern =
+            document.getElementById('pattern-dropdown').value;
+          if (selectedPattern !== 'Choose Desired Pattern') {
+            const matchOrder = patterns[selectedPattern]?.[numBells] || [];
+            errorDiv.style.color = '#888';
+            // Add pattern name prefix to the bell order
+            const displayName =
+              selectedPattern === 'Exploding Tittums'
+                ? 'Exp. Tittums'
+                : selectedPattern;
+            errorDiv.innerHTML = `${displayName} = ${matchOrder
+              .map(convertBellNumberForDisplay)
+              .join(' ')}`;
+            if (counter) {
+              errorDiv.appendChild(counter);
+            }
+          } else {
+            errorDiv.innerHTML = '';
+            if (counter) {
+              errorDiv.appendChild(counter);
+            }
+          }
+        }, 3000);
+      }
+
+      function highlightRecentSwap(a, b, shiftedBell) {
+        // Remove previous highlights
+        document.querySelectorAll('#current-order .bell').forEach(bell => {
+          bell.classList.remove('recent-swap');
+        });
+
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+
+        if (isCallingUp) {
+          // When calling up, highlight the swapped bells
+          document.querySelectorAll('#current-order .bell').forEach(bell => {
+            const bellNum = convertDisplayToNumber(bell.innerText);
+            if (bellNum === a || bellNum === b) {
+              bell.classList.add('recent-swap');
+            }
+          });
+        } else {
+          // When calling down, highlight the bell that moved and the bell that was shifted
+          document.querySelectorAll('#current-order .bell').forEach(bell => {
+            const bellNum = convertDisplayToNumber(bell.innerText);
+            if (bellNum === a || bellNum === shiftedBell) {
+              bell.classList.add('recent-swap');
+            }
+          });
+        }
+      }
+
+      function highlightSwappedBells(a, b) {
+        const bellA = document.getElementById(`bell-${a}`);
+        const bellB = document.getElementById(`bell-${b}`);
+        if (bellA) bellA.classList.add('selected');
+        if (bellB) bellB.classList.add('selected');
+      }
+
+      function clearHighlight() {
+        document.querySelectorAll('#selection .bell').forEach(bell => {
+          bell.classList.remove('highlight');
+        });
+      }
+
+      // swapBells: if playback is active and not forcing immediate swap,
+      // queue the swap; otherwise, apply it and then clear the selection/highlight.
+      function swapBells(a, b, isFromPlayback = false) {
+        if (!isFromPlayback && isPlaying) {
+          pendingSwap = [a, b];
+          return;
+        }
+
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+        const indexA = currentOrder.indexOf(a);
+        const indexB = currentOrder.indexOf(b);
+
+        // Calculate the shifted bell before the swap
+        const shiftedBell = isCallingUp ? null : currentOrder[indexB + 1];
+
+        if (isCallingUp) {
+          // When calling up, swap the bells
+          [currentOrder[indexA], currentOrder[indexB]] = [
+            currentOrder[indexB],
+            currentOrder[indexA],
+          ];
+          updateHistory(`${a} to ${b}`, currentOrder);
+        } else {
+          // When calling down, move bell a to position just after bell b
+          currentOrder.splice(indexA, 1);
+          currentOrder.splice(indexB + 1, 0, a);
+          updateHistory(`${a} to ${b}`, currentOrder);
+        }
+
+        updateDisplay();
+        highlightRecentSwap(a, b, shiftedBell);
+
+        if (isFromPlayback) {
+          // Clear selection immediately during playback
+          selectedBells = [];
+          updateSelectionDisplay();
+          clearHighlight();
+        } else {
+          // Keep the selection highlight for 1 second when not in playback
+          setTimeout(() => {
+            selectedBells = [];
+            updateSelectionDisplay();
+            clearHighlight();
+          }, 1000);
+        }
+      }
+
+      /*********************** Audio Playback Functions ************************/
+      let audioContext = null;
+      let isPlaying = false;
+      let pendingSwap = null; // Holds a valid swap requested during playback
+      let pendingStop = false; // Flag to indicate we should stop after sequence completes
+      let playbackTimeout;
+      let bellBuffers = new Array(12); // Array to store preloaded bell sound buffers
+      let activeSources = new Set(); // Keep track of currently playing sounds
+
+      // Calculate pan position for a bell number (-0.342 = 20° left, 0.342 = 20° right)
+      function calculatePanPosition(bellNumber, totalBells) {
+        // Map bell numbers to positions from -0.342 (20° left) to 0.342 (20° right)
+        const maxPan = 0.342; // sin(20°)
+        return -maxPan + ((bellNumber - 1) * 2 * maxPan) / (totalBells - 1);
+      }
+
+      // Function to preload all bell sound files
+      async function preloadBellSounds() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+        }
+
+        try {
+          for (let i = 1; i <= 12; i++) {
+            const response = await fetch(`${i}.wav`);
+            const arrayBuffer = await response.arrayBuffer();
+            bellBuffers[i - 1] = await audioContext.decodeAudioData(
+              arrayBuffer
+            );
+          }
+        } catch (error) {
+          console.error('Error loading bell sounds:', error);
+          // If loading fails, force offline mode
+          document.getElementById('offline-mode-toggle').checked = true;
+        }
+      }
+
+      // Call preloadBellSounds when the page loads
+      window.addEventListener('load', preloadBellSounds);
+
+      // Map bell numbers to sound file indices based on the total number of bells
+      function getSoundIndex(bellNumber, totalBells) {
+        // Calculate how many steps down from 12 we need to go for bell 1
+        const offset = 12 - totalBells;
+        return offset + bellNumber - 1;
+      }
+
+      // Frequencies are hard coded (the first note corresponds to bell 1)
+      const bellFrequencies = {
+        5: [440, 392, 370, 330, 294], // A4, G4, F#4, E4, D4
+        6: [494, 440, 392, 370, 330, 294], // B4, A4, G4, F#4, E4, D4
+        8: [587, 554, 494, 440, 392, 370, 330, 294], // D5, C#5, B4, A4, G4, F#4, E4, D4
+        10: [740, 659, 587, 554, 494, 440, 392, 370, 330, 294], // F#5, E5, D5, C#5, B4, A4, G4, F#4, E4, D4
+        12: [880, 784, 740, 659, 587, 554, 494, 440, 392, 370, 330, 294], // A5, G5, F#5, E5, D5, C#5, B4, A4, G4, F#4, E4, D4
+      };
+
+      // Duration (in seconds) per bell stroke
+      const bellDurations = {
+        5: 0.33,
+        6: 0.31,
+        8: 0.28,
+        10: 0.25,
+        12: 0.22,
+      };
+
+      // Play a bell sound using either the synthesized tone (offline mode) or WAV file (online mode)
+      function playBellSound(bellNumber, duration) {
+        if (!audioContext) return;
+
+        const isOfflineMode = document.getElementById(
+          'offline-mode-toggle'
+        ).checked;
+        const spatialEnabled = document.getElementById(
+          'spatial-sound-toggle'
+        ).checked;
+
+        // Calculate pan position for this bell if spatial audio is enabled
+        const panPosition = spatialEnabled
+          ? calculatePanPosition(bellNumber, numBells)
+          : 0;
+
+        // Create stereo panner if spatial audio is enabled
+        const panner = spatialEnabled
+          ? audioContext.createStereoPanner()
+          : null;
+        if (panner) {
+          panner.pan.value = panPosition;
+          panner.connect(audioContext.destination);
+        }
+
+        if (isOfflineMode) {
+          // Use synthesized tone
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          const frequency = bellFrequencies[numBells][bellNumber - 1];
+
+          oscillator.type = 'triangle';
+          oscillator.frequency.setValueAtTime(
+            frequency,
+            audioContext.currentTime
+          );
+
+          gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + 1.0
+          );
+
+          // Connect through panner if spatial audio is enabled, otherwise directly to destination
+          oscillator.connect(gainNode);
+          if (panner) {
+            gainNode.connect(panner);
+          } else {
+            gainNode.connect(audioContext.destination);
+          }
+
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + duration);
+
+          // Add to active sources
+          activeSources.add(oscillator);
+          oscillator.onended = () => {
+            activeSources.delete(oscillator);
+          };
+        } else {
+          // Use WAV file
+          const soundIndex = getSoundIndex(bellNumber, numBells);
+          if (bellBuffers[soundIndex]) {
+            const source = audioContext.createBufferSource();
+            source.buffer = bellBuffers[soundIndex];
+
+            // Connect through panner if spatial audio is enabled, otherwise directly to destination
+            if (panner) {
+              source.connect(panner);
+            } else {
+              source.connect(audioContext.destination);
+            }
+
+            // Add to active sources before starting
+            activeSources.add(source);
+            source.onended = () => {
+              activeSources.delete(source);
+            };
+
+            source.start();
+          }
+        }
+      }
+
+      function playSequence() {
+        // Handle any pending reset at the start of the function
+        if (pendingReset) {
+          switch (pendingReset) {
+            case 'bells':
+              // Reset bells to rounds order
+              currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+              selectedBells = [];
+              updateDisplay();
+              updateHistory('Go!', currentOrder);
+              // Hide the pending pattern rounds notification
+              document.getElementById(
+                'pending-rounds-notification'
+              ).style.display = 'none';
+              break;
+            case 'patterns':
+              // Reset to first pattern in sequence without clearing the sequence
+              if (patternSequence.length > 0) {
+                // First clear the history array and table
+                history = [];
+                const tbody = document.querySelector('#change-history tbody');
+                if (tbody) {
+                  tbody.innerHTML = '';
+                  const headerRow = document.createElement('tr');
+                  headerRow.innerHTML = `
+                    <th>Change</th>
+                    <th>Bell Order</th>
+                  `;
+                  tbody.appendChild(headerRow);
+                }
+
+                // Then reset bells to rounds order
+                currentOrder = Array.from(
+                  { length: numBells },
+                  (_, i) => i + 1
+                );
+                selectedBells = [];
+                updateDisplay();
+                updateHistory('Go!', currentOrder);
+
+                // Reset pattern sequence
+                currentPatternIndex = 0;
+                // Update the dropdown to match the pattern
+                const dropdown = document.getElementById('pattern-dropdown');
+                dropdown.value = patternSequence[0];
+
+                // Now apply the pattern and update all displays
+                applyPattern(patternSequence[0]);
+
+                // Force update the pattern display and counter
+                const errorMessageDiv =
+                  document.getElementById('error-message');
+                const matchOrder =
+                  patterns[patternSequence[0]]?.[numBells] || [];
+                const displayName =
+                  patternSequence[0] === 'Exploding Tittums'
+                    ? 'Exp. Tittums'
+                    : patternSequence[0];
+                errorMessageDiv.style.color = '#888';
+                errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+                  .map(convertBellNumberForDisplay)
+                  .join(' ')}`;
+
+                // Update the pattern sequence counter using the proper function
+                updatePatternSequenceCounter();
+
+                // Hide the pending pattern restart notification
+                document.getElementById(
+                  'pending-pattern-restart-notification'
+                ).style.display = 'none';
+              }
+              break;
+            case 'everything':
+              // Reset the pattern dropdown to default
+              const dropdown = document.getElementById('pattern-dropdown');
+              dropdown.value = 'Choose Desired Pattern';
+
+              // Reset the current order to the default for current number of bells
+              currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+
+              // Clear history except for the initial "Go!" entry
+              history = [];
+              updateHistory('Go!', currentOrder);
+
+              // Update the display
+              updateDisplay();
+
+              // Clear any error messages
+              document.getElementById('error-message').innerText = '';
+
+              // Clear any selected bells
+              selectedBells = [];
+              updateSelectionDisplay();
+              clearHighlight();
+
+              // Clear pattern sequence and update UI
+              patternSequence = [];
+              currentPatternIndex = 0;
+              selectedSequencePattern = null;
+              const counter = document.getElementById(
+                'pattern-sequence-counter'
+              );
+              if (counter) {
+                counter.remove();
+              }
+              // Hide the pending pattern rounds notification
+              document.getElementById(
+                'pending-full-reset-notification'
+              ).style.display = 'none';
+
+              isPlaying = false;
+              break;
+          }
+          pendingReset = null;
+        }
+
+        if (!isPlaying) {
+          // Remove stopping class when playback actually stops
+          const standButton = document.querySelector(
+            'button.bell-number-button[onclick="stopPlayback()"]'
+          );
+          standButton.classList.remove('stopping');
+          standButton.classList.remove('selected');
+
+          // Clear selections and pendingSwap/pendingLead without applying them
+          selectedBells = [];
+          pendingSwap = null;
+          pendingLead = null;
+          updateSelectionDisplay();
+          clearHighlight();
+          // Remove selected state from lead button
+          document.querySelector('.lead-button').classList.remove('selected');
+
+          // If there's a pending bell count change, apply it now
+          if (pendingBellCount !== null) {
+            applyBellCount(pendingBellCount);
+          }
+          return;
+        }
+
+        const bellOrder = [...currentOrder, ...currentOrder];
+        const duration = bellDurations[numBells];
+        let index = 0;
+        let nextBellTime = audioContext.currentTime;
+
+        // Check if "Open Handstroke" is enabled
+        const openHandstrokeEnabled = document.getElementById(
+          'open-handstroke-toggle'
+        ).checked;
+        const spatialEnabled = document.getElementById(
+          'spatial-sound-toggle'
+        ).checked;
+
+        function playNextBell() {
+          if (!isPlaying) {
+            // Remove stopping class when playback actually stops
+            const standButton = document.querySelector(
+              'button.bell-number-button[onclick="stopPlayback()"]'
+            );
+            standButton.classList.remove('stopping');
+            standButton.classList.remove('selected');
+            return;
+          }
+
+          if (index < bellOrder.length) {
+            const bell = bellOrder[index];
+
+            // Schedule the next bell sound at the precise time
+            const isOfflineMode = document.getElementById(
+              'offline-mode-toggle'
+            ).checked;
+            if (!isOfflineMode) {
+              // For online mode (WAV files), schedule precisely
+              const soundIndex = getSoundIndex(bell, numBells);
+              if (bellBuffers[soundIndex]) {
+                const source = audioContext.createBufferSource();
+                source.buffer = bellBuffers[soundIndex];
+
+                if (spatialEnabled) {
+                  // Create and configure panner if spatial audio is enabled
+                  const panner = audioContext.createStereoPanner();
+                  panner.pan.value = calculatePanPosition(bell, numBells);
+                  source.connect(panner);
+                  panner.connect(audioContext.destination);
+                } else {
+                  // Connect directly to destination if spatial audio is disabled
+                  source.connect(audioContext.destination);
+                }
+
+                // Add to active sources before starting
+                activeSources.add(source);
+                source.onended = () => {
+                  activeSources.delete(source);
+                };
+
+                // Schedule the sound to start at the exact time
+                source.start(nextBellTime);
+              }
+            } else {
+              // For offline mode, use the existing playBellSound function
+              playBellSound(bell, duration);
+            }
+
+            // Update the time for the next bell - use full duration for consistent timing
+            nextBellTime += duration;
+            index++;
+
+            // Schedule the next bell using the same full duration
+            playbackTimeout = setTimeout(playNextBell, duration * 1000);
+          } else {
+            // Sequence is complete
+            if (pendingStop) {
+              // If stop was requested, stop playback now
+              handlePlaybackComplete();
+              return;
+            }
+
+            // Always add a handstroke gap if enabled, regardless of sequence
+            if (openHandstrokeEnabled) {
+              playbackTimeout = setTimeout(() => {
+                // Only apply pending changes if we're not stopping
+                if (!pendingStop) {
+                  if (pendingSwap) {
+                    swapBells(pendingSwap[0], pendingSwap[1], true);
+                    pendingSwap = null;
+                  } else if (pendingLead) {
+                    applyLeadChange(pendingLead.bell, pendingLead.previousLead);
+                    pendingLead = null;
+                  }
+                }
+                // Start next sequence after the gap
+                playSequence();
+              }, duration * 1000);
+            } else {
+              // Skip pause and immediately restart sequence
+              // Only apply pending changes if we're not stopping
+              if (!pendingStop) {
+                if (pendingSwap) {
+                  swapBells(pendingSwap[0], pendingSwap[1], true);
+                  pendingSwap = null;
+                } else if (pendingLead) {
+                  applyLeadChange(pendingLead.bell, pendingLead.previousLead);
+                  pendingLead = null;
+                }
+              }
+              playSequence();
+            }
+          }
+        }
+
+        playNextBell();
+      }
+
+      function startPlayback() {
+        if (isPlaying) return;
+        if (!audioContext) {
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+        }
+
+        // Clear any pending bell count changes since we're starting with current state
+        pendingBellCount = null;
+
+        pendingStop = false;
+        isPlaying = true;
+
+        // Update button visibility
+        updateButtonVisibility();
+
+        // If there's a pattern sequence, ensure the counter and prompt are displayed
+        if (patternSequence.length > 0) {
+          const errorMessageDiv = document.getElementById('error-message');
+          const matchOrder =
+            patterns[patternSequence[currentPatternIndex]]?.[numBells] || [];
+          const displayName =
+            patternSequence[currentPatternIndex] === 'Exploding Tittums'
+              ? 'Exp. Tittums'
+              : patternSequence[currentPatternIndex];
+          errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+            .map(convertBellNumberForDisplay)
+            .join(' ')}`;
+          updatePatternSequenceCounter();
+        }
+
+        // Ensure the AudioContext is in a running state before playing
+        audioContext
+          .resume()
+          .then(() => {
+            playSequence();
+          })
+          .catch(err => console.error('Error resuming audio context:', err));
+      }
+
+      function stopPlayback() {
+        if (!isPlaying) return;
+
+        // Set the pending stop flag instead of stopping immediately
+        pendingStop = true;
+
+        // Show the pending stand notification
+        document.getElementById('pending-stand-notification').style.display =
+          'flex';
+
+        // Add stopping class to Stand button
+        const standButton = document.querySelector(
+          'button.bell-number-button[onclick="stopPlayback()"]'
+        );
+        standButton.classList.add('stopping');
+      }
+
+      /*********************** Initialize Default State ************************/
+      // Initialize with 6 bells by default
+      setBells(6, true);
+
+      function resetSimulator() {
+        // Reset the pattern dropdown to default
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
+        // Reset the current order to the default for current number of bells
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+
+        // Clear history except for the initial "Go!" entry
+        history = [];
+        updateHistory('Go!', currentOrder);
+
+        // Update the display
+        updateDisplay();
+
+        // Clear any error messages
+        document.getElementById('error-message').innerText = '';
+
+        // Clear any selected bells
+        selectedBells = [];
+        updateSelectionDisplay();
+        clearHighlight();
+
+        // Clear pattern sequence and update UI
+        patternSequence = [];
+        currentPatternIndex = 0;
+        selectedSequencePattern = null;
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+
+        // Hide the clear sequence button
+        const clearSequenceButton = document.getElementById(
+          'clear-sequence-button'
+        );
+        if (clearSequenceButton) {
+          clearSequenceButton.style.display = 'none';
+        }
+
+        // Stop any ongoing playback
+        stopPlayback();
+      }
+
+      function toggleOptionsBox() {
+        const optionsBox = document.getElementById('options-box');
+        const overlay = document.getElementById('overlay');
+        if (
+          optionsBox.style.display === 'none' ||
+          optionsBox.style.display === ''
+        ) {
+          optionsBox.style.display = 'block';
+          overlay.style.display = 'block';
+        } else {
+          optionsBox.style.display = 'none';
+          overlay.style.display = 'none';
+        }
+      }
+
+      // Close options box when clicking outside
+      document.addEventListener('DOMContentLoaded', function () {
+        const optionsBox = document.getElementById('options-box');
+        const optionsIcon = document.getElementById('options-icon');
+        const patternsBox = document.getElementById('patterns-box');
+        const infoBox = document.getElementById('info-box');
+        const overlay = document.getElementById('overlay');
+
+        // Function to close all popups
+        function closeAllPopups() {
+          optionsBox.style.display = 'none';
+          patternsBox.style.display = 'none';
+          infoBox.style.display = 'none';
+          overlay.style.display = 'none';
+        }
+
+        // Add click handler for the overlay
+        overlay.addEventListener('click', function (event) {
+          // Only close if clicking directly on the overlay (not its children)
+          if (event.target === overlay) {
+            closeAllPopups();
+          }
+        });
+
+        // Add click handlers for the popup boxes
+        if (optionsBox) {
+          optionsBox.addEventListener('click', function (event) {
+            event.stopPropagation();
+          });
+        }
+
+        if (patternsBox) {
+          patternsBox.addEventListener('click', function (event) {
+            event.stopPropagation();
+          });
+        }
+
+        if (infoBox) {
+          infoBox.addEventListener('click', function (event) {
+            event.stopPropagation();
+          });
+        }
+      });
+
+      function togglePatternsBox() {
+        const patternsBox = document.getElementById('patterns-box');
+        const overlay = document.getElementById('overlay');
+        const pendingNotification = document.getElementById(
+          'pending-stand-notification'
+        );
+
+        if (
+          patternsBox.style.display === 'none' ||
+          patternsBox.style.display === ''
+        ) {
+          // If playback is active, set pending flag and trigger stop
+          if (isPlaying) {
+            pendingPatternsBoxOpen = true;
+            pendingStop = true;
+            const standButton = document.querySelector(
+              'button.bell-number-button[onclick="stopPlayback()"]'
+            );
+            standButton.classList.add('stopping');
+
+            // Show the pending notification
+            pendingNotification.style.display = 'block';
+            return;
+          }
+
+          // Reset everything before showing patterns box
+          resetEverything();
+
+          patternsBox.style.display = 'block';
+          overlay.style.display = 'block';
+          displayPatterns(numBells);
+        } else {
+          patternsBox.style.display = 'none';
+          overlay.style.display = 'none';
+          // Reset scroll position when closing
+          patternsBox.scrollTop = 0;
+          pendingPatternsBoxOpen = false;
+          // Hide the pending notification
+          pendingNotification.style.display = 'none';
+        }
+      }
+
+      function displayPatterns(count) {
+        const patternsDisplay = document.getElementById('patternsDisplay');
+        patternsDisplay.innerHTML = '';
+
+        // Update button states
+        document.querySelectorAll('.patterns-bell-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          button.classList.toggle('selected', buttonCount === count);
+          // Remove pending state when displaying patterns
+          button.classList.remove('pending');
+        });
+
+        for (const [name, orders] of Object.entries(patterns)) {
+          if (orders[count]) {
+            const patternDiv = document.createElement('div');
+            patternDiv.classList.add('pattern');
+            patternDiv.style.cursor = 'pointer'; // Add pointer cursor to indicate clickable
+            patternDiv.onclick = () => selectPattern(name, count); // Pass the count to selectPattern
+
+            const patternName = document.createElement('div');
+            patternName.classList.add('pattern-name');
+            patternName.textContent =
+              name === 'Exploding Tittums' ? 'Exp. Tittums' : name;
+
+            const patternOrder = document.createElement('div');
+            patternOrder.classList.add('pattern-order');
+            patternOrder.textContent = orders[count]
+              .map(convertBellNumberForDisplay)
+              .join(''); // Remove space between bell numbers
+
+            patternDiv.appendChild(patternName);
+            patternDiv.appendChild(patternOrder);
+            patternsDisplay.appendChild(patternDiv);
+          }
+        }
+      }
+
+      function selectPattern(patternName, count) {
+        // Clear pattern sequence when selecting a new pattern
+        patternSequence = [];
+        currentPatternIndex = 0;
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+
+        // Close the patterns box and reset scroll position immediately
+        const patternsBox = document.getElementById('patterns-box');
+        patternsBox.style.display = 'none';
+        patternsBox.scrollTop = 0;
+        document.getElementById('overlay').style.display = 'none';
+
+        // Scroll the main window to the top immediately
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (count !== numBells) {
+          pendingPattern = patternName;
+          document.querySelectorAll('.bell-number-button').forEach(button => {
+            const buttonCount = parseInt(button.textContent);
+            if (!isNaN(buttonCount)) {
+              button.classList.toggle('selected', buttonCount === count);
+            }
+          });
+          setBells(count);
+          return;
+        }
+
+        applyPattern(patternName);
+      }
+
+      function applyPattern(patternName) {
+        // Update the pattern dropdown
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = patternName;
+
+        // Update the pattern highlighting
+        updatePatternHighlighting();
+      }
+
+      function handleLeadBell() {
+        if (selectedBells.length !== 1) {
+          showError('Select the bell in 2nds place then click "Lead"');
+          return;
+        }
+
+        const bell = selectedBells[0];
+        const bellIndex = currentOrder.indexOf(bell);
+
+        // Only allow the second bell to be moved to Lead
+        if (bellIndex !== 1) {
+          showError(
+            'Only the bell currently in 2nds place can be called into Lead'
+          );
+          selectedBells = [];
+          updateSelectionDisplay();
+          return;
+        }
+
+        // Get the bell that was previously in Lead position
+        const previousLead = currentOrder[0];
+
+        if (isPlaying) {
+          // If playback is active, queue the lead change and add selected state to button
+          pendingLead = { bell, previousLead };
+          document.querySelector('.lead-button').classList.add('selected');
+          return;
+        }
+
+        // If not playing, apply the lead change immediately but keep the selection for 1 second
+        document.querySelector('.lead-button').classList.add('selected');
+        // Keep the selectedBells array as is - it will be cleared by the timeout in applyLeadChange
+        applyLeadChange(bell, previousLead);
+      }
+
+      function applyLeadChange(bell, previousLead) {
+        const bellIndex = currentOrder.indexOf(bell);
+        // Move the selected bell to the front
+        currentOrder.splice(bellIndex, 1);
+        currentOrder.unshift(bell);
+
+        updateHistory(`${bell} Lead`, currentOrder);
+        updateDisplay();
+        highlightRecentSwap(bell, previousLead, previousLead);
+
+        if (isPlaying) {
+          // Clear selection immediately during playback
+          selectedBells = [];
+          updateSelectionDisplay();
+          document.querySelector('.lead-button').classList.remove('selected');
+        } else {
+          // Keep both the bell selection and lead button highlight for 1 second when not in playback
+          // Re-highlight the bell in case updateDisplay cleared it
+          document.getElementById(`bell-${bell}`).classList.add('selected');
+          setTimeout(() => {
+            selectedBells = [];
+            updateSelectionDisplay();
+            document.querySelector('.lead-button').classList.remove('selected');
+          }, 1000);
+        }
+      }
+
+      function setCallingStyle(isCallingUp) {
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const callingDownLabel = document.getElementById('calling-down-label');
+        const leadContainer = document.getElementById('lead-container');
+
+        // Update the label colors based on the selection
+        callingUpLabel.style.color = isCallingUp ? '#007bff' : '#ccc';
+        callingDownLabel.style.color = isCallingUp ? '#ccc' : '#007bff';
+
+        // Show/hide the Lead button based on calling style
+        leadContainer.style.display = isCallingUp ? 'none' : 'block';
+      }
+
+      function updateCallingStyle() {
+        const isCallingUp = !document.getElementById('open-handstroke-toggle')
+          .checked;
+        setCallingStyle(isCallingUp);
+      }
+
+      function updatePatternsDisplay(count) {
+        // Clear pattern sequence immediately when changing bell count
+        patternSequence = [];
+        currentPatternIndex = 0;
+        selectedSequencePattern = null;
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+
+        // Hide the clear sequence button
+        const clearSequenceButton = document.getElementById(
+          'clear-sequence-button'
+        );
+        if (clearSequenceButton) {
+          clearSequenceButton.style.display = 'none';
+        }
+
+        // Update button states
+        document.querySelectorAll('.patterns-bell-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          button.classList.toggle('selected', buttonCount === count);
+        });
+
+        displayPatterns(count);
+      }
+
+      function openPatternSequenceDialog() {
+        const patternSequenceBox = document.getElementById(
+          'pattern-sequence-box'
+        );
+        const overlay = document.getElementById('overlay');
+        patternSequenceBox.style.display = 'block';
+        overlay.style.display = 'block';
+
+        // If playback is active, set pendingStop to let current sequence complete
+        if (isPlaying) {
+          pendingStop = true;
+          // Add stopping class to Stand button
+          const standButton = document.querySelector(
+            'button.bell-number-button[onclick="stopPlayback()"]'
+          );
+          standButton.classList.add('stopping');
+        }
+
+        // Clear any existing pattern sequence
+        patternSequence = [];
+        currentPatternIndex = 0;
+
+        // Get the currently selected bell count from the patterns dialog
+        const selectedBellButton = document.querySelector(
+          '.patterns-bell-button.selected'
+        );
+        const selectedBellCount = selectedBellButton
+          ? parseInt(selectedBellButton.textContent)
+          : numBells;
+
+        // Update available patterns based on the selected bell count
+        const availablePatternsGrid =
+          document.getElementById('available-patterns');
+        availablePatternsGrid.innerHTML = '';
+
+        for (const [name, orders] of Object.entries(patterns)) {
+          if (orders[selectedBellCount]) {
+            const div = document.createElement('div');
+            div.className = 'pattern-sequence-item';
+            div.textContent = name;
+
+            // Add click handler for pattern selection
+            div.onclick = () => togglePatternSelection(name, div);
+
+            availablePatternsGrid.appendChild(div);
+          }
+        }
+
+        // Hide the Start Sequence and Undo buttons since we're starting fresh
+        const beginButton = document.getElementById('begin-sequence-button');
+        const undoButton = document.getElementById('undo-sequence-button');
+        if (beginButton) {
+          beginButton.style.display = 'none';
+        }
+        if (undoButton) {
+          undoButton.style.display = 'none';
+        }
+      }
+
+      function togglePatternSelection(patternName, element) {
+        // Check if this would create consecutive duplicates
+        if (
+          patternSequence.length > 0 &&
+          patternSequence[patternSequence.length - 1] === patternName
+        ) {
+          return; // Don't add if it would create consecutive duplicates
+        }
+
+        // Add pattern to sequence
+        patternSequence.push(patternName);
+        element.classList.add('selected');
+
+        // Create or update positions container
+        let positionsContainer = element.querySelector('.positions');
+        if (!positionsContainer) {
+          positionsContainer = document.createElement('div');
+          positionsContainer.className = 'positions';
+          element.appendChild(positionsContainer);
+        }
+
+        // Add position number
+        const position = document.createElement('span');
+        position.className = 'position';
+        position.textContent = patternSequence.length;
+        positionsContainer.appendChild(position);
+
+        // Update the Begin Calling This Sequence and Undo buttons visibility
+        const beginButton = document.getElementById('begin-sequence-button');
+        const undoButton = document.getElementById('undo-sequence-button');
+        if (beginButton) {
+          beginButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
+        if (undoButton) {
+          undoButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
+      }
+
+      function undoLastPattern() {
+        if (patternSequence.length === 0) return;
+
+        // Remove the last pattern from the sequence
+        patternSequence.pop();
+
+        // Update all pattern positions to reflect the current sequence state
+        updatePatternPositions();
+
+        // Update button visibility
+        const beginButton = document.getElementById('begin-sequence-button');
+        const undoButton = document.getElementById('undo-sequence-button');
+        if (beginButton) {
+          beginButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
+        if (undoButton) {
+          undoButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
+      }
+
+      function updatePatternPositions() {
+        // First, clear all selections and position numbers
+        document.querySelectorAll('.pattern-sequence-item').forEach(item => {
+          item.classList.remove('selected');
+          const positionsContainer = item.querySelector('.positions');
+          if (positionsContainer) {
+            positionsContainer.remove();
+          }
+        });
+
+        // Then, update selections and positions for patterns in the sequence
+        patternSequence.forEach((patternName, index) => {
+          const displayName =
+            patternName === 'Exploding Tittums' ? 'Exp. Tittums' : patternName;
+          const items = document.querySelectorAll('.pattern-sequence-item');
+          items.forEach(item => {
+            // Get the base text content without any position numbers
+            const baseText = item.textContent.replace(/[0-9]/g, '').trim();
+            // Match against both the full name and display name
+            if (baseText === patternName || baseText === displayName) {
+              item.classList.add('selected');
+
+              // Create or update positions container
+              let positionsContainer = item.querySelector('.positions');
+              if (!positionsContainer) {
+                positionsContainer = document.createElement('div');
+                positionsContainer.className = 'positions';
+                item.appendChild(positionsContainer);
+              }
+
+              // Add position number
+              const position = document.createElement('span');
+              position.className = 'position';
+              position.textContent = index + 1;
+              positionsContainer.appendChild(position);
+            }
+          });
+        });
+      }
+
+      function closePatternSequenceDialog() {
+        const patternSequenceBox = document.getElementById(
+          'pattern-sequence-box'
+        );
+        const overlay = document.getElementById('overlay');
+        patternSequenceBox.style.display = 'none';
+        overlay.style.display = 'none';
+      }
+
+      function confirmPatternSequence() {
+        if (patternSequence.length > 0) {
+          // Get the currently selected bell count from the patterns dialog
+          const selectedBellButton = document.querySelector(
+            '.patterns-bell-button.selected'
+          );
+          const selectedBellCount = selectedBellButton
+            ? parseInt(selectedBellButton.textContent)
+            : numBells;
+
+          // If the selected bell count is different from current, update it first
+          if (selectedBellCount !== numBells) {
+            // Store the pattern sequence before updating bell count
+            const storedSequence = [...patternSequence];
+
+            // Update the main simulator's bell number buttons
+            document.querySelectorAll('.bell-number-button').forEach(button => {
+              const buttonCount = parseInt(button.textContent);
+              if (!isNaN(buttonCount)) {
+                button.classList.toggle(
+                  'selected',
+                  buttonCount === selectedBellCount
+                );
+              }
+            });
+
+            // Apply the bell count change and wait for it to complete
+            setBells(selectedBellCount);
+
+            // Wait for the bell count change to complete before applying the pattern sequence
+            setTimeout(() => {
+              // Restore the pattern sequence
+              patternSequence = storedSequence;
+              currentPatternIndex = 0;
+
+              // Apply first pattern and update displays
+              applyPattern(patternSequence[0]);
+
+              // Update the error message with the pattern prompt
+              const errorMessageDiv = document.getElementById('error-message');
+              const matchOrder =
+                patterns[patternSequence[0]]?.[selectedBellCount] || [];
+              const displayName =
+                patternSequence[0] === 'Exploding Tittums'
+                  ? 'Exp. Tittums'
+                  : patternSequence[0];
+              errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+                .map(convertBellNumberForDisplay)
+                .join(' ')}`;
+
+              // Update the pattern sequence counter
+              updatePatternSequenceCounter();
+              closePatternSequenceDialog();
+              closePatternsDialog();
+            }, 200);
+          } else {
+            // If no bell count change needed, apply pattern sequence immediately
+            currentPatternIndex = 0;
+            applyPattern(patternSequence[0]);
+
+            // Update the error message with the pattern prompt
+            const errorMessageDiv = document.getElementById('error-message');
+            const matchOrder = patterns[patternSequence[0]]?.[numBells] || [];
+            const displayName =
+              patternSequence[0] === 'Exploding Tittums'
+                ? 'Exp. Tittums'
+                : patternSequence[0];
+            errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+              .map(convertBellNumberForDisplay)
+              .join(' ')}`;
+
+            // Update the pattern sequence counter
+            updatePatternSequenceCounter();
+            closePatternSequenceDialog();
+            closePatternsDialog();
+          }
+        }
+      }
+
+      function updatePatternSequenceCounter() {
+        const errorMessageDiv = document.getElementById('error-message');
+        const existingCounter = document.getElementById(
+          'pattern-sequence-counter'
+        );
+        const clearSequenceButton = document.getElementById(
+          'clear-sequence-button'
+        );
+
+        if (patternSequence.length > 1) {
+          if (!existingCounter) {
+            const counter = document.createElement('div');
+            counter.id = 'pattern-sequence-counter';
+            counter.innerHTML = `Pattern <span id="current-pattern-number">${
+              currentPatternIndex + 1
+            }</span> of ${patternSequence.length}`;
+            counter.style.marginTop = '10px';
+            counter.style.fontSize = '0.9em';
+            counter.style.color = '#666';
+            counter.style.cursor = 'pointer';
+            counter.onclick = showSequencePopup;
+            errorMessageDiv.appendChild(counter);
+          } else {
+            existingCounter.innerHTML = `Pattern <span id="current-pattern-number">${
+              currentPatternIndex + 1
+            }</span> of ${patternSequence.length}`;
+          }
+        } else {
+          if (existingCounter) {
+            existingCounter.remove();
+          }
+        }
+      }
+
+      function showSequencePopup() {
+        const popup = document.querySelector('.sequence-popup');
+        const overlay = document.querySelector('.sequence-popup-overlay');
+        const list = document.getElementById('sequence-list');
+
+        // Clear and populate the list
+        list.innerHTML = '';
+        patternSequence.forEach((pattern, index) => {
+          const li = document.createElement('li');
+          li.setAttribute('data-number', (index + 1).toString());
+          li.textContent = pattern; // Use the full pattern name
+          if (index === currentPatternIndex) {
+            li.classList.add('current');
+          }
+          list.appendChild(li);
+        });
+
+        // Show popup and overlay
+        popup.style.display = 'block';
+        overlay.style.display = 'block';
+
+        // Add click handlers to dismiss
+        const dismissPopup = () => {
+          popup.style.display = 'none';
+          overlay.style.display = 'none';
+        };
+
+        overlay.onclick = dismissPopup;
+        popup.onclick = dismissPopup;
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            dismissPopup();
+          }
+        });
+      }
+
+      function clearPatternSequenceFromDialog() {
+        // Clear the pattern sequence
+        patternSequence = [];
+        currentPatternIndex = 0;
+
+        // Remove the counter
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+
+        // Reset the pattern dropdown
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
+        // Clear the error message area
+        const errorMessageDiv = document.getElementById('error-message');
+        errorMessageDiv.innerHTML = '';
+      }
+
+      function closePatternsDialog() {
+        const patternsBox = document.getElementById('patterns-box');
+        const overlay = document.getElementById('overlay');
+        patternsBox.style.display = 'none';
+        overlay.style.display = 'none';
+        patternsBox.scrollTop = 0;
+      }
+
+      function showResetOptions() {
+        const resetOptionsBox = document.getElementById('reset-options-box');
+        const overlay = document.getElementById('overlay');
+        const resetOptionsList = document.getElementById('reset-options-list');
+
+        // Clear previous options
+        resetOptionsList.innerHTML = '';
+
+        // Create options based on whether there's a pattern sequence
+        const hasSequence = patternSequence.length > 0;
+
+        if (hasSequence) {
+          // Three options when there's a sequence
+          const options = [
+            { text: 'Restart Pattern', action: resetPatterns },
+            { text: 'Reset Everything', action: resetEverything },
+          ];
+
+          options.forEach(option => {
+            const div = document.createElement('div');
+            div.className = 'reset-options-item';
+            div.textContent = option.text;
+            div.onclick = () => {
+              option.action();
+              menu.style.display = 'none';
+            };
+            resetOptionsList.appendChild(div);
+          });
+        } else {
+          // Two options when there's no sequence
+          const options = [
+            { text: 'Reset Everything', action: resetEverything },
+          ];
+
+          options.forEach(option => {
+            const div = document.createElement('div');
+            div.className = 'reset-options-item';
+            div.textContent = option.text;
+            div.onclick = () => {
+              option.action();
+              menu.style.display = 'none';
+            };
+            resetOptionsList.appendChild(div);
+          });
+        }
+
+        resetOptionsBox.style.display = 'block';
+        overlay.style.display = 'block';
+      }
+
+      function closeResetOptionsDialog() {
+        const resetOptionsBox = document.getElementById('reset-options-box');
+        const overlay = document.getElementById('overlay');
+        resetOptionsBox.style.display = 'none';
+        overlay.style.display = 'none';
+      }
+
+      function resetBells() {
+        if (isPlaying) {
+          // If playback is active, queue the reset without stopping playback
+          pendingReset = 'bells';
+          const notification = document.getElementById(
+            'pending-rounds-notification'
+          );
+          notification.style.display = 'flex';
+          return;
+        }
+
+        // Simply reset bells to rounds order without affecting playback
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+        selectedBells = [];
+        updateDisplay();
+        updateHistory('Go!', currentOrder);
+
+        // Update button visibility
+        updateButtonVisibility();
+      }
+
+      function resetPatterns() {
+        // If playback is active, queue the reset without stopping playback
+        if (isPlaying) {
+          pendingReset = 'patterns';
+          const notification = (document.getElementById(
+            'pending-pattern-restart-notification'
+          ).style.display = 'flex');
+          return;
+        }
+
+        // Clear the history array first
+        history = [];
+
+        // Clear the history table's tbody
+        const tbody = document.querySelector('#change-history tbody');
+        if (tbody) {
+          tbody.innerHTML = '';
+          const headerRow = document.createElement('tr');
+          headerRow.innerHTML = `
+            <th>Change</th>
+            <th>Bell Order</th>
+          `;
+          tbody.appendChild(headerRow);
+        }
+
+        // Reset bells to rounds order
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+        selectedBells = [];
+        updateDisplay();
+
+        // Update history with just the initial "Go!" entry
+        updateHistory('Go!', currentOrder);
+
+        // Then reset to first pattern in sequence without clearing the sequence
+        if (patternSequence.length > 0) {
+          currentPatternIndex = 0;
+          // First update the dropdown to match the pattern
+          const dropdown = document.getElementById('pattern-dropdown');
+          dropdown.value = patternSequence[0];
+
+          // Then apply the pattern and update all displays
+          applyPattern(patternSequence[0]);
+
+          // Force update the pattern display and counter
+          const errorMessageDiv = document.getElementById('error-message');
+          const matchOrder = patterns[patternSequence[0]]?.[numBells] || [];
+          const displayName =
+            patternSequence[0] === 'Exploding Tittums'
+              ? 'Exp. Tittums'
+              : patternSequence[0];
+          errorMessageDiv.style.color = '#888';
+          errorMessageDiv.innerHTML = `${displayName} = ${matchOrder
+            .map(convertBellNumberForDisplay)
+            .join(' ')}`;
+
+          // Update the pattern sequence counter
+          const counter = document.getElementById('pattern-sequence-counter');
+          if (counter) {
+            counter.textContent = `Pattern 1 of ${patternSequence.length}`;
+          } else {
+            const newCounter = document.createElement('div');
+            newCounter.className = 'pattern-sequence-counter';
+            newCounter.id = 'pattern-sequence-counter';
+            newCounter.textContent = `Pattern 1 of ${patternSequence.length}`;
+            newCounter.style.marginTop = '10px';
+            newCounter.style.fontSize = '0.9em';
+            newCounter.style.color = '#666';
+            newCounter.style.cursor = 'pointer';
+            newCounter.onclick = showSequencePopup;
+            errorMessageDiv.appendChild(newCounter);
+          }
+
+          // Show the clear sequence button
+          const clearSequenceButton = document.getElementById(
+            'clear-sequence-button'
+          );
+          if (clearSequenceButton) {
+            clearSequenceButton.style.display = 'inline-block';
+          }
+        }
+      }
+
+      function resetEverything() {
+        if (isPlaying) {
+          // If playback is active, queue the reset without stopping playback
+          pendingReset = 'everything';
+          const notification = document.getElementById(
+            'pending-full-reset-notification'
+          );
+          notification.style.display = 'flex';
+          // Add stopping class to Stand button
+          const standButton = document.querySelector(
+            'button.bell-number-button[onclick="stopPlayback()"]'
+          );
+          standButton.classList.add('stopping');
+          return;
+        }
+
+        // Reset the pattern dropdown to default
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
+        // Reset the current order to the default for current number of bells
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+
+        // Clear history except for the initial "Go!" entry
+        history = [];
+        updateHistory('Go!', currentOrder);
+
+        // Update the display
+        updateDisplay();
+
+        // Clear any error messages
+        document.getElementById('error-message').innerText = '';
+
+        // Clear any selected bells
+        selectedBells = [];
+        updateSelectionDisplay();
+        clearHighlight();
+
+        // Clear pattern sequence and update UI
+        patternSequence = [];
+        currentPatternIndex = 0;
+        selectedSequencePattern = null;
+        const counter = document.getElementById('pattern-sequence-counter');
+        if (counter) {
+          counter.remove();
+        }
+      }
+
+      // Add pendingReset variable at the top with other global variables
+      let pendingReset = null;
+
+      function toggleResetOptions() {
+        const menu = document.getElementById('reset-options-menu');
+        const isVisible = menu.style.display === 'block';
+
+        // Close other menus if they're open
+        document.getElementById('options-box').style.display = 'none';
+        document.getElementById('patterns-box').style.display = 'none';
+        document.getElementById('info-box').style.display = 'none';
+
+        if (!isVisible) {
+          // Create options based on whether there's a pattern sequence
+          const hasSequence = patternSequence.length > 0;
+          menu.innerHTML = '';
+
+          // Check if bells are already in rounds
+          const isInRounds = currentOrder.every(
+            (bell, index) => bell === index + 1
+          );
+
+          if (hasSequence) {
+            // Three options when there's a sequence
+            const options = [
+              { text: 'Restart Pattern', action: resetPatterns },
+              { text: 'Reset Everything', action: resetEverything },
+            ];
+
+            options.forEach(option => {
+              const div = document.createElement('div');
+              div.className = 'reset-options-item';
+              div.textContent = option.text;
+              div.onclick = () => {
+                option.action();
+                menu.style.display = 'none';
+              };
+              menu.appendChild(div);
+            });
+          } else {
+            // Two options when there's no sequence
+            const options = [
+              { text: 'Reset Everything', action: resetEverything },
+            ];
+
+            options.forEach(option => {
+              const div = document.createElement('div');
+              div.className = 'reset-options-item';
+              div.textContent = option.text;
+              div.onclick = () => {
+                option.action();
+                menu.style.display = 'none';
+              };
+              menu.appendChild(div);
+            });
+          }
+
+          menu.style.display = 'block';
+        } else {
+          menu.style.display = 'none';
+        }
+      }
+
+      // Close reset options menu when clicking outside
+      document.addEventListener('click', function (event) {
+        const menu = document.getElementById('reset-options-menu');
+        const resetIcon = document.querySelector(
+          '.options-icon[onclick="toggleResetOptions()"]'
+        );
+
+        if (
+          menu &&
+          !menu.contains(event.target) &&
+          !resetIcon.contains(event.target)
+        ) {
+          menu.style.display = 'none';
+        }
+      });
+
+      function updatePatternSequenceDisplay() {
+        const container = document.querySelector(
+          '.pattern-sequence-selected ul'
+        );
+        container.innerHTML = '';
+        patternSequence.forEach((pattern, index) => {
+          const li = document.createElement('li');
+          li.className = index === selectedSequencePattern ? 'selected' : '';
+          li.innerHTML = `
+            <span class="pattern-name">${pattern}</span>
+            <div class="pattern-actions">
+              <button class="pattern-sequence-button" onclick="removePatternFromSequence()">Remove</button>
+              <button class="pattern-sequence-button" onclick="movePatternUp()">Up</button>
+              <button class="pattern-sequence-button" onclick="movePatternDown()">Down</button>
+            </div>
+          `;
+          container.appendChild(li);
+        });
+
+        // Update the Begin Calling This Sequence button visibility
+        const beginButton = document.getElementById('begin-sequence-button');
+        if (beginButton) {
+          beginButton.style.display =
+            patternSequence.length > 0 ? 'block' : 'none';
+        }
+
+        updatePatternSequenceCounter();
+      }
+
+      // Initialize the simulator with 6 bells
+      setBells(6, true);
+
+      // Initialize pattern dialog
+      function initializePatternDialog() {
+        // ... existing code ...
+      }
+
+      function handlePatternBellButtonClick(count) {
+        setBells(count);
+        closePatternDialog();
+      }
+
+      function filterPatternsByBells(count) {
+        // Update selected state of pattern dialog bell buttons
+        document.querySelectorAll('.patterns-bell-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          if (!isNaN(buttonCount)) {
+            button.classList.toggle('selected', buttonCount === count);
+          }
+        });
+
+        // Update displayed patterns for selected bell count
+        displayPatterns(count);
+      }
+
+      // Add this to the playback completion handler in playSequence
+      function handlePlaybackComplete() {
+        isPlaying = false;
+        pendingStop = false;
+        const standButton = document.querySelector(
+          'button.bell-number-button[onclick="stopPlayback()"]'
+        );
+        standButton.classList.remove('stopping');
+        standButton.classList.remove('selected');
+
+        // Update button visibility
+        updateButtonVisibility();
+
+        // Clear selections and pending changes
+        selectedBells = [];
+        pendingSwap = null;
+        pendingLead = null;
+        updateSelectionDisplay();
+        clearHighlight();
+        document.querySelector('.lead-button').classList.remove('selected');
+
+        // Handle pending bell count change
+        if (pendingBellCount !== null) {
+          applyBellCount(pendingBellCount);
+          // Hide the pending stand notification after applying bell count change
+          document.getElementById('pending-stand-notification').style.display =
+            'none';
+        }
+
+        // Handle pending patterns box open
+        if (pendingPatternsBoxOpen) {
+          pendingPatternsBoxOpen = false;
+          // Hide the pending notification before opening the patterns box
+          document.getElementById('pending-stand-notification').style.display =
+            'none';
+          togglePatternsBox();
+        }
+
+        // Hide the pending stand notification when playback stops
+        document.getElementById('pending-stand-notification').style.display =
+          'none';
+      }
+
+      // Add this function to handle button visibility rules
+      function updateButtonVisibility() {
+        const goButton = document.getElementById('go-button');
+        const standButton = document.querySelector(
+          'button.bell-number-button[onclick="stopPlayback()"]'
+        );
+        const roundsButton = document.getElementById('rounds-button');
+        const isInRounds = currentOrder.every(
+          (bell, index) => bell === index + 1
+        );
+
+        // Go button rules
+        goButton.style.display = isPlaying ? 'none' : 'inline-block';
+
+        // Stand button rules
+        standButton.style.display = isPlaying ? 'inline-block' : 'none';
+
+        // Rounds button rules
+        roundsButton.style.display = isInRounds ? 'none' : 'inline-block';
+      }
+    </script>
+  </body>
+</html>

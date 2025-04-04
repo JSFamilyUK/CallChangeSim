@@ -216,15 +216,15 @@ V6.2 - 14/03/25
             Add logo.jpg
             Update index.html to disply splash screen for 2 seconds
             Splash screen shows logo and then fades to site content
-            Test and Live sites updated to match
-            Version number update
-            Backup of live version taken
-        - Additional patter added for whittingtons on 12
+         - Additional patter added for whittingtons on 12
             Whittingtons: {
                 8: [1, 2, 7, 5, 3, 4, 6, 8],
                 12: [5, 3, 1, 2, 4, 6, 11, 9, 7, 8, 10, 12],
             },
-
+        - Test and Live sites updated to match
+        - Version number update
+        - Backup of live version taken
+       
             
 V6.2.1 - 14/03/25
     UI Change Only
@@ -243,3 +243,159 @@ V6.2.2 - 18/03/25
         - Test and Live sites updated to match
         - Version number update
         - Backup of live version taken
+
+V7.0 - 23/03/25
+	Functional change for custom call change sequences
+		- Rearrangement of icons in container
+		- Addition of new reset options
+		    Reset Bells - Rounds
+		    Reset Pattern - Pattern Sequence
+		    Reset Both - Rounds and Pattern Sequence
+		    Reset Everything - Total reset to initial state
+		- Add create and clear sequence buttons to patterns box
+		    Logic to show and hide clear sequence
+		    Create button shows existing sequence for editing if one exists
+		- Addition of pattern-sequence-box, lists and buttons
+		    Clicking pattern adds to order list at the top of screen
+		    Change the order or remove it using control buttons
+		    Begin by clicking begin sequence button
+		- Addition of order controls (up/down/remove/clear)
+		- Link pattern box bell number buttons to simulator bell number buttons
+		- Button visibility for Begin button based on sequence count > 1
+		- Update data if calling style or number of bells changes
+		    Reset of pattern sequence data
+		    Reload available patterns for change sequence and patterns box
+		- Addition of pattern sequence details to bell selection area
+		- Addition of sequence pop-up to show current and upcoming changes
+		- Calling down error message updates (use bell numbers)
+		- Addition of playSequence code
+		    Handles pending user actions for reset options in playback mode
+		- Addition of Whittingtons pattern for 12 bells
+		- Version number update
+		
+V7.1 - 24/03/25
+    Updates to custom call change sequence functionality / UI
+        - Amend Reset Options to remove Reset Both option
+        - Remove separate control area for selected sequence
+        - Remove clear sequence button from patterns box
+        - Add inline order buttons to sequence items
+        - Allow multiple selections of the same pattern in the sequence
+        - New start and undo buttons and show/hide functionality
+        - Create sequence button wording change
+        - Change to prevent automatic full reset when bell number changes
+        - Improve pattern sequence counter updates
+        - Force playback stop when pattern sequence box opens
+        - Version number update
+        
+V7.2 - 26/03/25
+    Functional changes to pattern box opening. Add "pending" notifications
+        - Add pending state to bell number buttons in main simulator and patterns box for pending bell number change in playback mode
+        - Add functionality to support pending bell count changes
+        - Patterns box opening stops playback (including pending behaviour)
+        - Patterns box restyled and add new Change Sequence button
+        - Move start and undo buttons to the top of the page in pattern sequence box
+        - Apply bell count changes when pattern sequence starts (updates simulator bell number to match sequence)
+        - Use full name for Exploding Tittums in pattern sequence box
+        - Amend sequence popup styling
+        - Add pending notification with spinner for pending changes during playback
+        - new handlePlaybackComplete function to manage pending changes when playback stops
+        - Change text in pattern sequence popup to include prompt
+        - Update version number
+        
+V7.2.1 - 26/03/25
+    ???
+        - Update New Call Change Sequence button text
+        - Update pattern sequence popup text
+        - Update patterns box title
+         -Update version number
+        
+V7.2.2 - 26/03/25
+    Additional "Pending" notifications and display / hide / apply code
+        - Added pending-stand-notification
+            Displays notification while sequence completes when user clicks stand button
+            Displays notificaiton while sequence completes when stand is triggered by other actions
+        - Add pending pattern reset nofification
+            Displays notification while sequence completes when pattern restart is triggered by user
+        - Version number update
+        
+V7.2.3 - 26/03/25
+    Additional "Pending" notifications and display / hide / apply code
+        - Added pending-rounds-notification
+            Displays notification while sequence completes when user clicks rounds reset option
+        - Added pending-rounds-notification
+            Displays notification while sequence completes when user clicks reset everything option
+        - Version number update
+
+V7.2.4 - 26/03/25
+    Improve pattern matching code
+        Check against display name and full name - improves stability for Exp. Tittums
+        - Version number update
+        
+V7.3.1 - 28/03/25
+    UI Improvements and bell speed adjustment
+        - Change selected bell number button to green
+        - Change selected pattern bell number button to green
+        - Add border to sequence-popup
+        - Change Rounds reset option to UI button - located with Go and Stand
+        - Apply visibility based on relevance to ensure only two buttons show at once:
+            Don't show Rounds if bells are in Rounds
+            Don't show Stand if playback is not active
+            Don't show Go if playback is active
+        - Remove prompt element from pattern sequence prompt
+        - Wording change to simplify text on Stand and Rounds notifications
+        - Amend bell playback speed:
+            5: 0.3      5: 0.33
+            6: 0.28     6: 0.31
+            8: 0.26     8: 0.28
+            10: 0.24    10: 0.25
+            12: 0.22    No change
+        - Version number update
+        
+V8.0 - 02/04/25
+    Guided call changes functionality and UI tweaks
+        - Build transition data generation process with calling up to down conversion logic
+            All patterns to all other patterns mapping built
+            Most efficient sequence created within calling up rules created by sequence generation script
+            Map calling up bells numbers to calling up positions
+            Direct mapping of calling up bell numbers to positions
+            Convert calling up positions to calling down positions
+            Direct mapping of calling down positions to bell numbers
+        - Main bell number buttons have flexible width
+        - Help icon realigned
+        - Options container split left and right for new icon display
+        - Reference box creation and styling
+            Bell number sync from / to main simulator with exceptions for matching values
+            Each time reference is open bell number check is performed:
+                Ringing 8 bells
+                Create 10 bell reference box content
+                Return to sim
+                Change to 10 bells
+                Reference box retains data on open as bell numbers match
+                OR
+                Ringing 8 bells
+                Create 8 bell reference box content
+                Return to sim
+                Change to 10 bells
+                Reference box is cleared when opened as previous content does not match current bell number
+            Bell Number buttons - patterns update with changes
+            Calling Up / Down buttons - change display updates to change in calling style
+            Start and Finish In dropdowns for patterns
+            Pattern sequence read from transition data produced by sequence generation script
+            Change data displayed step by step with order matching to highlight equal values between the sim and the current step
+        - Reference box icon added to icons left area. All others in icons right
+        - Link calling style options triggers and reference box buttons to sync changes
+        - Version number update
+        
+V9.0 - 03/04/25
+    Additional functionality added to support guided call changes
+        - New icon for target current pattern (jump change) linked to pattern-dropdown in main simulator
+        - Icon placement set to be between patterns and options icons
+        - Add code to reset current bell pattern to the pattern selected in the pattern drop down. Enables starting changes in any valid pattern
+        - New resetting pattern notification for jump change icon click during playback
+        - Add code to handle additional pending behaviour linked to jump change icon
+        - Hide target/jump change icon when pattern sequence with >1 pattern is loaded into main simulator
+        - Display when hide condition is no longer met
+        - Wording change for prompt in pattern sequence box
+        - Version number update
+        
+        

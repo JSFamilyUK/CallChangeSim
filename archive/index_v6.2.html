@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <title>Call Change Simulator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 20px;
+      }
+
+      .bell-number-button {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 6px 8px;
+        margin: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: background-color 0.3s ease;
+      }
+
+      .bell-number-button:hover {
+        background-color: #0056b3;
+      }
+
+      .bell-number-button.selected {
+        background-color: #0056b3;
+        border: 1px solid #003d80;
+        box-sizing: border-box;
+      }
+
+      .bell-number-button.stopping {
+        background-color: darkred;
+      }
+
+      .bell-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 10px 0;
+      }
+
+      /* Style for the selection area container */
+      .selection-area-container {
+        background-color: #f8f9fa;
+        border: 1px solid #007bff;
+        border-radius: 15px;
+        padding: 5px 20px; /* Reduced top/bottom padding to 5px, kept left/right at 20px */
+        margin: 20px auto;
+        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+        width: calc(
+          100% - 40px
+        ); /* Account for body margin (20px) on each side */
+        max-width: 560px; /* Reduced from 600px to account for body margins */
+      }
+
+      /* New style for selection area numbers */
+      .selection-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #888;
+        cursor: pointer;
+        transition: color 0.2s;
+        padding: 0;
+        min-width: 12px;
+        text-align: center;
+        box-sizing: border-box;
+        flex: 0 0 auto;
+      }
+
+      .selection-number.selected {
+        color: #007bff;
+      }
+
+      #selection {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 10px 0 20px 0;
+        flex-wrap: nowrap;
+        padding: 0 20px; /* Increased from 5px to 20px to maintain spacing from edges */
+        box-sizing: border-box;
+        width: 100%;
+        gap: min(
+          30px,
+          calc(
+            (100% - (var(--num-bells) * 12px) - 40px) / (var(--num-bells) - 1)
+          )
+        ); /* Adjusted for new 40px total padding */
+      }
+
+      /* Update the heading margin in the selection area */
+      .selection-area-container h2 {
+        margin: 5px 0 15px 0; /* Top: 5px, Right: 0, Bottom: 15px, Left: 0 */
+      }
+
+      /* Update error message margin */
+      #error-message {
+        color: darkred;
+        font-weight: bold;
+        margin: 10px; /* Reduced from 18px */
+        min-height: 20px;
+      }
+
+      .bell {
+        width: 25px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #007bff;
+        background-color: white;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      #current-order .bell {
+        border-color: #007bff;
+      }
+
+      .bell.selected {
+        background-color: blue;
+        color: white;
+      }
+
+      .bell.highlight {
+        background-color: yellow; /* Highlight pending swap bells */
+      }
+      .bell.recent-swap {
+        border: 2px solid red !important;
+      }
+
+      .bell.matched {
+        background-color: lightgreen;
+      }
+
+      table {
+        margin: auto;
+        border-collapse: collapse;
+        width: auto;
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      tr.selected {
+        background-color: lightgray;
+      }
+
+      .current-pattern {
+        font-size: 20px;
+        min-height: 30px;
+        margin: 1px 5px;
+        color: darkred;
+      }
+
+      #pattern-dropdown {
+        font-size: 14px; /* Larger text */
+        font-weight: bold;
+        padding: 8px 12px; /* More padding */
+        margin: 5px; /* Space between buttons */
+        border-radius: 8px; /* Rounded corners */
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        outline: none; /* Remove focus outline */
+      }
+
+      /* Ensures the info icon stays on the same line as the text */
+      .info-container {
+        display: inline-block;
+        position: relative;
+        margin-left: 8px; /* Space between text and icon */
+      }
+
+      /* Style for the help button */
+      .help-button {
+        font-size: 22px;
+        font-weight: bold;
+        color: #007bff;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        vertical-align: middle;
+      }
+
+      .help-button:hover {
+        opacity: 0.8;
+      }
+
+      /* Centered info box styling */
+      .info-box {
+        display: none;
+        position: fixed; /* Ensures it stays in the center of the screen */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%); /* Centers the box */
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 15px;
+        width: 300px;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        text-align: left;
+      }
+
+      .info-box strong {
+        display: block;
+        margin-bottom: 20px;
+      }
+
+      /* Styles for the close button inside the info box */
+      .close-btn {
+        display: block;
+        margin-top: 10px;
+        padding: 5px 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      .info-box ul {
+        padding-left: 20px;
+        margin: 5px 0;
+      }
+
+      .info-box li {
+        font-size: 16px;
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 10px;
+      }
+
+      .info-box li svg {
+        flex-shrink: 0;
+        margin-right: 8px;
+        margin-top: 0;
+        width: 20px;
+        height: 20px;
+        vertical-align: top;
+      }
+
+      .info-box li span {
+        flex-grow: 1;
+        line-height: 1.4;
+      }
+
+      /* Image wrapper and positioning styles */
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .left-image {
+        position: absolute;
+        left: calc(50% - 150px); /* Position 125px left of center */
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .right-image {
+        position: absolute;
+        right: calc(50% - 150px); /* Position 125px right of center */
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      .center-text {
+        flex-grow: 1; /* Takes up the remaining space */
+        text-align: center; /* Center the text */
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      /* Toggle container styling */
+      .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 5px 0;
+      }
+
+      /* Label styling */
+      .toggle-label {
+        font-size: 16px;
+        font-weight: bold;
+        margin-right: 5px; /* Space between label and toggle */
+      }
+
+      /* Wrapper for the toggle switch */
+      .toggle-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 48px; /* Reduce width by 20% (60px * 0.8) */
+        height: 27.2px; /* Reduce height by 20% (34px * 0.8) */
+      }
+
+      /* Hide the checkbox input */
+      .toggle-wrapper input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      /* Slider styling */
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc; /* Default background */
+        transition: 0.4s;
+        border-radius: 34px; /* Rounded edges */
+      }
+
+      .slider:before {
+        position: absolute;
+        content: '';
+        height: 20.8px; /* Reduce height by 20% (26px * 0.8) */
+        width: 20.8px; /* Reduce width by 20% (26px * 0.8) */
+        left: 3.2px; /* Reduce left by 20% (4px * 0.8) */
+        bottom: 3.2px; /* Reduce bottom by 20% (4px * 0.8) */
+        background-color: white; /* Knob color */
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      /* When checkbox is checked, change background and move knob */
+      input:checked + .slider {
+        background-color: #007bff; /* Blue when active */
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(20.8px); /* Move knob to the right */
+      }
+
+      /* Patterns popup styling */
+      .patterns-box {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+      }
+
+      .patterns-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .patterns-title {
+        margin: 0 0 15px 0;
+      }
+
+      .patterns-bell-buttons {
+        display: flex;
+        gap: 5px;
+        justify-content: center;
+      }
+
+      .patterns-bell-button {
+        font-size: 14px;
+        font-weight: bold;
+        padding: 4px 8px;
+        margin: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+      }
+
+      .patterns-bell-button:hover {
+        background-color: #0056b3;
+      }
+
+      .patterns-bell-button.selected {
+        background-color: #0056b3;
+        border: 2px solid #003d80;
+      }
+
+      .patterns-container {
+        margin-top: 20px;
+        text-align: left;
+      }
+
+      .pattern {
+        margin-bottom: 5px;
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        white-space: nowrap;
+        overflow-x: auto;
+        padding-right: 10px;
+        min-height: 35px;
+      }
+
+      .pattern-name {
+        font-weight: bold;
+        color: #333;
+        min-width: 150px;
+        flex-shrink: 0; /* Prevent name from shrinking */
+      }
+
+      .pattern-order {
+        font-family: monospace;
+        color: #555;
+        flex-grow: 1;
+        text-align: right;
+        font-size: 16px; /* Increase font size */
+        padding-left: 10px; /* Add some space between name and order */
+        white-space: nowrap; /* Keep numbers on one line */
+        overflow-x: auto; /* Allow horizontal scrolling if needed */
+      }
+
+      /* Options box styling */
+      .options-box {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 20px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+        text-align: center; /* Center all content */
+      }
+
+      /* Options dialog content container */
+      .options-dialog-content {
+        margin-top: 20px;
+        text-align: center; /* Center all content */
+        padding-bottom: 10px;
+        display: flex;
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items horizontally */
+        gap: 0; /* Remove all space between options */
+      }
+
+      /* Icon container styling */
+      .options-container {
+        width: 320px; /* Change from 100% to fit-content */
+        margin: 0 auto;
+        text-align: right;
+        padding: 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        box-sizing: border-box;
+      }
+
+      /* Move toggle container styles to be more specific */
+      .options-dialog-content .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Center content */
+        margin: 5px 0;
+        padding: 5px 10px; /* Add horizontal padding */
+        border: 1px solid #eee;
+        border-radius: 5px;
+        width: auto; /* Change from 100% to auto */
+        min-width: 300px; /* Set a minimum width to give content more space */
+      }
+
+      .options-dialog-content .toggle-label {
+        font-size: 16px;
+        font-weight: bold;
+        margin-right: 10px; /* Reduce right margin */
+      }
+
+      .options-dialog-content .toggle-wrapper {
+        margin-left: 0; /* Remove auto margin */
+      }
+
+      /* Add cog icon styling */
+      .options-icon {
+        width: 25.6px; /* Reduced from 32px by 20% */
+        height: 25.6px; /* Reduced from 32px by 20% */
+        cursor: pointer;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        fill: #007bff;
+        display: inline-block; /* Change from block to inline-block */
+      }
+
+      .options-icon:hover {
+        opacity: 1;
+      }
+
+      /* Add container for title and options */
+      .header-container {
+        position: relative;
+        margin-bottom: 10px; /* Reduced from 20px to 10px */
+      }
+
+      .header-container h1 {
+        margin: 0; /* Remove default margin from h1 */
+      }
+
+      /* Add Lead button styling */
+      .lead-button {
+        width: 60px;
+        height: 32px;
+        border-radius: 8px;
+        border: 2px solid #007bff;
+        background-color: white;
+        color: #007bff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+        background-color: #f0f0f0f0;
+        margin: 5px auto;
+        padding: 0;
+      }
+
+      .lead-button:hover {
+        background-color: #f0f0f0;
+      }
+
+      .lead-button.selected {
+        background-color: #007bff;
+        color: white;
+      }
+
+      /* Add overlay styling */
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(
+          255,
+          255,
+          255,
+          0.7
+        ); /* White background with 70% opacity */
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        z-index: 999;
+        pointer-events: auto; /* Make overlay clickable */
+      }
+
+      /* Update z-index for popup boxes to be above overlay */
+      .options-box,
+      .patterns-box,
+      .info-box {
+        z-index: 1000;
+        pointer-events: auto; /* Ensure popup boxes can receive clicks */
+      }
+
+      /* Add container for bell buttons */
+      .bell-buttons-container {
+        width: 100%;
+        max-width: 600px;
+        margin: 10px auto 0;
+        padding-right: 20px;
+        display: flex;
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 5px;
+      }
+
+      /* Add splash screen styling */
+      .splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      .splash-screen.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .splash-screen img {
+        max-width: 80%;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Add splash screen div -->
+    <div class="splash-screen">
+      <img src="logo.jpg" alt="Call Change Simulator Logo" />
+    </div>
+    <!-- Original body content starts here -->
+    <!-- Add overlay div at the start of body -->
+    <div class="overlay" id="overlay"></div>
+    <div class="header-container">
+      <h1>Call Change Simulator</h1>
+    </div>
+    <div class="options-container">
+      <svg
+        class="options-icon"
+        onclick="togglePatternsBox()"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
+        />
+      </svg>
+      <svg
+        class="options-icon"
+        id="options-icon"
+        onclick="toggleOptionsBox()"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"
+        />
+      </svg>
+      <svg
+        class="options-icon"
+        onclick="resetSimulator()"
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+        />
+      </svg>
+      <button class="help-button" onclick="toggleInfoBox()">?</button>
+    </div>
+    <div class="bell-buttons-container">
+      <button class="bell-number-button" onclick="setBells(5)">5 Bells</button>
+      <button class="bell-number-button" onclick="setBells(6)">6 Bells</button>
+      <button class="bell-number-button" onclick="setBells(8)">8 Bells</button>
+      <button class="bell-number-button" onclick="setBells(10)">
+        10 Bells
+      </button>
+      <button class="bell-number-button" onclick="setBells(12)">
+        12 Bells
+      </button>
+    </div>
+    <h4 style="font-weight: normal; font-size: 0.9em">
+      <img
+        src="bell_recent_swap.jpg"
+        alt="Icon"
+        style="height: 1.5em; vertical-align: middle; border: none"
+      />
+      = Recently Swapped
+      <img
+        src="bell_correct_position.jpg"
+        alt="Icon"
+        style="
+          height: 1.5em;
+          vertical-align: middle;
+          border: none;
+          margin-left: 20px;
+        "
+      />
+      = Correct Position
+    </h4>
+    <div id="current-order" class="bell-container"></div>
+    <div id="pattern" class="current-pattern"></div>
+    <select id="pattern-dropdown" onchange="updatePatternHighlighting()">
+      <option value="Choose Desired Pattern">Choose Desired Pattern</option>
+    </select>
+    <button class="bell-number-button" onclick="startPlayback()">Go</button>
+    <button class="bell-number-button" onclick="stopPlayback()">Stand</button>
+    <div class="selection-area-container">
+      <h2 style="text-align: center; font-weight: normal">
+        Select Bells to Swap
+      </h2>
+      <div id="selection" class="bell-container"></div>
+      <div id="lead-container" style="display: none">
+        <div class="lead-button" onclick="handleLeadBell()">Lead</div>
+      </div>
+      <div
+        id="error-message"
+        style="
+          color: darkred;
+          font-weight: bold;
+          margin: 10px;
+          min-height: 20px;
+        "
+      ></div>
+    </div>
+    <h2 style="font-weight: normal">Previous Changes</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Changes</th>
+          <th>Bell Order</th>
+          <th>Pattern</th>
+        </tr>
+      </thead>
+      <tbody id="history-table"></tbody>
+    </table>
+    <div>&nbsp;</div>
+    <br />
+    <div class="bell-container">&nbsp;</div>
+
+    <!-- Options Box -->
+    <div class="options-box" id="options-box">
+      <h2>Options</h2>
+      <div class="options-dialog-content">
+        <div class="toggle-container" style="justify-content: center">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span
+              id="calling-up-label"
+              style="font-weight: bold; color: #007bff; cursor: pointer"
+              onclick="setCallingStyle(true)"
+              >Call Up</span
+            >
+            <span style="color: #ccc">|</span>
+            <span
+              id="calling-down-label"
+              style="font-weight: bold; color: #ccc; cursor: pointer"
+              onclick="setCallingStyle(false)"
+              >Call Down</span
+            >
+          </div>
+        </div>
+        <div class="toggle-container">
+          <label class="toggle-label">Open Handstroke:</label>
+          <label class="toggle-wrapper">
+            <input type="checkbox" id="open-handstroke-toggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-container">
+          <label class="toggle-label">Offline Mode (Tones not Bells):</label>
+          <label class="toggle-wrapper">
+            <input type="checkbox" id="offline-mode-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-container">
+          <label class="toggle-label">Spatial Bell Sounds:</label>
+          <label class="toggle-wrapper">
+            <input type="checkbox" id="spatial-sound-toggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <button class="close-btn" onclick="toggleOptionsBox()">Close</button>
+    </div>
+
+    <!-- Patterns Box -->
+    <div class="patterns-box" id="patterns-box">
+      <div class="patterns-header">
+        <h2 class="patterns-title">Choose a Pattern</h2>
+        <div class="patterns-bell-buttons">
+          <button
+            class="patterns-bell-button"
+            onclick="updatePatternsDisplay(5)"
+          >
+            5 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="updatePatternsDisplay(6)"
+          >
+            6 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="updatePatternsDisplay(8)"
+          >
+            8 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="updatePatternsDisplay(10)"
+          >
+            10 Bells
+          </button>
+          <button
+            class="patterns-bell-button"
+            onclick="updatePatternsDisplay(12)"
+          >
+            12 Bells
+          </button>
+        </div>
+      </div>
+      <div class="patterns-container" id="patternsDisplay"></div>
+      <button class="close-btn" onclick="togglePatternsBox()">Close</button>
+    </div>
+
+    <!-- Info Box (Centered) -->
+    <div class="info-box" id="info-box">
+      <strong>How to Use the Simulator:</strong>
+      <ul>
+        <li>
+          <svg
+            class="options-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="opacity: 0.7"
+          >
+            <path
+              d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
+            />
+          </svg>
+          <span
+            >The Patterns icon is used to view and select common patterns on
+            your chosen number of bells</span
+          >
+        </li>
+        <li>
+          <svg
+            class="options-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="opacity: 0.7"
+          >
+            <path
+              d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98 0 .33.03.66.07.98l-2.11 1.65c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65z"
+            />
+          </svg>
+          <span>
+            The Options icon is used to choose your calling style, whether you
+            want a Handstroke Gap and other playback options
+          </span>
+        </li>
+        <li>
+          <svg
+            class="options-icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            style="opacity: 0.7"
+          >
+            <path
+              d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"
+            />
+          </svg>
+          <span>
+            The Reset icon moves the bells back to their default order and
+            clears the change history
+          </span>
+        </li>
+        <li>Practice with or without the bells playing</li>
+        <li>
+          Select offline mode to use tones instead of bell sounds when there's
+          no signal
+        </li>
+        <li>Bells 10, 11 and 12 are represented by 0, E and T respectively</li>
+        <li>Calling errors will be displayed on the screen</li>
+        <li>If there's no sound, check your phone isn't in silent mode</li>
+      </ul>
+      <button class="close-btn" onclick="toggleInfoBox()">Close</button>
+    </div>
+
+    <div class="image-wrapper">
+      <br />
+      <a
+        href="https://paypal.me/photoshopuk/0.99"
+        onclick="return confirm('Powered by late nights and caffeine!\nRefill the coffee cup for 99p?');"
+      >
+        <img
+          src="buy-me-a-coffee.svg"
+          alt="Icon"
+          class="right-image"
+          style="
+            height: 17px;
+            vertical-align: middle;
+            border: none;
+            float: right;
+          "
+        />
+      </a>
+      <span class="center-text">v6.2 &copy; 2025<br />callchangesim.co.uk</span>
+      <a
+        href="https://wa.me/447786967923?text=Call%20Change%20Sim%20Feedback:"
+        target="_blank"
+      >
+        <img
+          src="whatsapp.jpeg"
+          alt="Request a New Feature"
+          class="left-image"
+          style="height: 20px"
+        />
+      </a>
+    </div>
+
+    <script>
+      // Splash screen handling
+      document.addEventListener('DOMContentLoaded', function () {
+        const splashScreen = document.querySelector('.splash-screen');
+
+        // Wait for 2 seconds then fade out
+        setTimeout(() => {
+          splashScreen.classList.add('fade-out');
+
+          // Remove the splash screen from DOM after fade animation completes
+          setTimeout(() => {
+            splashScreen.remove();
+          }, 500); // Match this with the CSS transition duration
+        }, 2000);
+      });
+
+      /*********************** Core Variables & Pattern Data ************************/
+      let numBells = 6;
+      let currentOrder = [];
+      let selectedBells = []; // Bells selected by the user for swap
+      let history = [];
+      let pendingBellCount = null; // Store pending bell count change
+      let pendingPattern = null; // Add this at the top with other global variables
+      let pendingLead = null; // Add this with other global variables at the top
+
+      // Helper function to convert bell numbers for display
+      function convertBellNumberForDisplay(num) {
+        if (num === 10) return '0';
+        if (num === 11) return 'E';
+        if (num === 12) return 'T';
+        return num.toString();
+      }
+
+      // Helper function to convert display back to number
+      function convertDisplayToNumber(display) {
+        if (display === '0') return 10;
+        if (display === 'E') return 11;
+        if (display === 'T') return 12;
+        return parseInt(display);
+      }
+
+      const patterns = {
+        Rounds: {
+          5: [1, 2, 3, 4, 5],
+          6: [1, 2, 3, 4, 5, 6],
+          8: [1, 2, 3, 4, 5, 6, 7, 8],
+          10: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          12: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        },
+        'Back Rounds': {
+          5: [4, 3, 2, 1, 5],
+          6: [5, 4, 3, 2, 1, 6],
+          8: [7, 6, 5, 4, 3, 2, 1, 8],
+          10: [9, 8, 7, 6, 5, 4, 3, 2, 1, 10],
+          12: [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 12],
+        },
+        'Roller Coaster': {
+          8: [1, 4, 3, 2, 7, 6, 5, 8],
+          10: [3, 2, 1, 6, 5, 4, 9, 8, 7, 10],
+        },
+        Queens: {
+          5: [2, 4, 1, 3, 5],
+          6: [1, 3, 5, 2, 4, 6],
+          8: [1, 3, 5, 7, 2, 4, 6, 8],
+          10: [1, 3, 5, 7, 9, 2, 4, 6, 8, 10],
+          12: [1, 3, 5, 7, 9, 11, 2, 4, 6, 8, 10, 12],
+        },
+        Kings: {
+          5: [3, 1, 2, 4, 5],
+          6: [5, 3, 1, 2, 4, 6],
+          8: [7, 5, 3, 1, 2, 4, 6, 8],
+          10: [9, 7, 5, 3, 1, 2, 4, 6, 8, 10],
+          12: [11, 9, 7, 5, 3, 1, 2, 4, 6, 8, 10, 12],
+        },
+        Tittums: {
+          5: [3, 1, 4, 2, 5],
+          6: [1, 4, 2, 5, 3, 6],
+          8: [1, 5, 2, 6, 3, 7, 4, 8],
+          10: [1, 6, 2, 7, 3, 8, 4, 9, 5, 10],
+          12: [1, 7, 2, 8, 3, 9, 4, 10, 5, 11, 6, 12],
+        },
+        'Exploding Tittums': {
+          6: [3, 4, 2, 5, 1, 6],
+          8: [4, 5, 3, 6, 2, 7, 1, 8],
+          10: [5, 6, 4, 7, 3, 8, 2, 9, 1, 10],
+          12: [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12],
+        },
+        Weasels: { 5: [1, 4, 2, 3, 5] },
+        Whittingtons: { 8: [1, 2, 7, 5, 3, 4, 6, 8] },
+        Hagdyke: {
+          6: [3, 4, 1, 2, 5, 6],
+          8: [1, 2, 5, 6, 3, 4, 7, 8],
+          10: [3, 4, 1, 2, 7, 8, 5, 6, 9, 10],
+          12: [1, 2, 5, 6, 3, 4, 9, 10, 7, 8, 11, 12],
+        },
+        Princes: {
+          6: [5, 3, 2, 1, 4, 6],
+          8: [7, 5, 3, 2, 1, 4, 6, 8],
+          10: [9, 7, 5, 3, 2, 1, 4, 6, 8, 10],
+          12: [11, 9, 7, 5, 3, 2, 1, 4, 6, 8, 10, 12],
+        },
+      };
+
+      /*********************** Display & History Functions ************************/
+      function toggleInfoBox() {
+        const infoBox = document.getElementById('info-box');
+        const overlay = document.getElementById('overlay');
+        if (infoBox.style.display === 'none' || infoBox.style.display === '') {
+          infoBox.style.display = 'block';
+          overlay.style.display = 'block';
+        } else {
+          infoBox.style.display = 'none';
+          overlay.style.display = 'none';
+        }
+      }
+
+      // Close when clicking outside the box
+      document.addEventListener('DOMContentLoaded', function () {
+        const infoBox = document.getElementById('info-box');
+        const infoIcon = document.querySelector('.info-icon');
+
+        if (infoBox && infoIcon) {
+          document.addEventListener('click', function (event) {
+            if (
+              !infoBox.contains(event.target) &&
+              !infoIcon.contains(event.target)
+            ) {
+              infoBox.style.display = 'none';
+            }
+          });
+        }
+      });
+
+      function setBells(count) {
+        if (isPlaying) {
+          // If playback is active, store the pending change and stop playback
+          pendingBellCount = count;
+          // Update selected state of bell number buttons immediately
+          document.querySelectorAll('.bell-number-button').forEach(button => {
+            const buttonCount = parseInt(button.textContent);
+            if (!isNaN(buttonCount)) {
+              // Only toggle if it's a bell number button
+              button.classList.toggle('selected', buttonCount === count);
+            }
+          });
+          stopPlayback();
+          return;
+        }
+
+        // Apply the bell count change immediately if not playing
+        applyBellCount(count);
+      }
+
+      function applyBellCount(count) {
+        numBells = count;
+        currentOrder = Array.from({ length: count }, (_, i) => i + 1);
+        selectedBells = [];
+        history = [];
+        pendingSwap = null;
+        pendingBellCount = null; // Clear any pending bell count
+
+        // Set the CSS variable for number of bells
+        document
+          .getElementById('selection')
+          .style.setProperty('--num-bells', count);
+
+        // Update selected state of bell number buttons
+        document.querySelectorAll('.bell-number-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          if (!isNaN(buttonCount)) {
+            // Only toggle if it's a bell number button
+            button.classList.toggle('selected', buttonCount === count);
+          }
+        });
+
+        updatePatternDropdown();
+
+        // Apply any pending pattern after bell count change
+        if (pendingPattern) {
+          applyPattern(pendingPattern);
+          pendingPattern = null;
+        } else {
+          // Clear or update pattern display in the error-message area
+          const errorMessageDiv = document.getElementById('error-message');
+          const dropdown = document.getElementById('pattern-dropdown');
+          if (dropdown.value !== 'Choose Desired Pattern') {
+            const matchOrder = patterns[dropdown.value]?.[numBells] || [];
+            errorMessageDiv.style.color = 'black';
+            errorMessageDiv.innerText = matchOrder.join('-');
+          } else {
+            errorMessageDiv.innerText = '';
+          }
+        }
+
+        updateHistory('Go!', currentOrder);
+        updateDisplay();
+
+        // Update patterns display if the patterns window is open
+        const patternsBox = document.getElementById('patterns-box');
+        if (patternsBox.style.display === 'block') {
+          displayPatterns(count);
+        }
+      }
+
+      function updatePatternDropdown() {
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.innerHTML =
+          '<option value="Choose Desired Pattern">Choose Desired Pattern</option>';
+        for (const pattern in patterns) {
+          if (patterns[pattern][numBells]) {
+            dropdown.innerHTML += `<option value="${pattern}">${pattern}</option>`;
+          }
+        }
+      }
+
+      function updateDisplay() {
+        // Update the current order display using the helper function for conversion
+        document.getElementById('current-order').innerHTML = currentOrder
+          .map(n => `<div class="bell">${convertBellNumberForDisplay(n)}</div>`)
+          .join('');
+
+        // Update the bell selection area with new number-only format (no conversion)
+        const selectionContainer = document.getElementById('selection');
+        const numBells = currentOrder.length;
+
+        // Create the HTML with space-between layout
+        selectionContainer.innerHTML = Array.from(
+          { length: numBells },
+          (_, i) => i + 1
+        )
+          .map(
+            n =>
+              `<div id="bell-${n}" class="selection-number" onclick="selectBell(${n})">${n}</div>`
+          )
+          .join('');
+
+        updatePattern();
+      }
+
+      function updatePattern() {
+        let foundPattern = '';
+        for (const [name, pattern] of Object.entries(patterns)) {
+          if (
+            JSON.stringify(pattern[numBells]) === JSON.stringify(currentOrder)
+          ) {
+            foundPattern = `- ${name} -`;
+            break;
+          }
+        }
+        document.getElementById('pattern').innerText = foundPattern;
+        updatePatternHighlighting();
+      }
+
+      function updatePatternHighlighting() {
+        const selectedPattern =
+          document.getElementById('pattern-dropdown').value;
+        const matchOrder = patterns[selectedPattern]?.[numBells] || [];
+
+        // Display the selected pattern's bell order in the error-message area
+        const errorMessageDiv = document.getElementById('error-message');
+        if (selectedPattern !== 'Choose Desired Pattern') {
+          errorMessageDiv.style.color = '#888';
+          // Add pattern name prefix to the bell order
+          const displayName =
+            selectedPattern === 'Exploding Tittums'
+              ? 'Exp. Tittums'
+              : selectedPattern;
+          errorMessageDiv.innerText = `${displayName} = ${matchOrder
+            .map(convertBellNumberForDisplay)
+            .join(' ')}`;
+        } else {
+          errorMessageDiv.innerText = '';
+        }
+
+        // Highlight matching bells in the current order
+        document
+          .querySelectorAll('#current-order .bell')
+          .forEach((bell, index) => {
+            // Convert the displayed bell number back to its actual numeric value
+            const displayedValue = bell.innerText;
+            const actualNum = convertDisplayToNumber(displayedValue);
+
+            bell.classList.toggle(
+              'matched',
+              selectedPattern !== 'Choose Desired Pattern' &&
+                matchOrder[index] === actualNum
+            );
+          });
+      }
+
+      function updateHistory(change, order) {
+        // Determine if the current order matches any predefined pattern
+        let matchedPattern = '';
+        for (const [name, pattern] of Object.entries(patterns)) {
+          if (JSON.stringify(pattern[numBells]) === JSON.stringify(order)) {
+            matchedPattern =
+              name === 'Exploding Tittums' ? 'Exp. Tittums' : name; // Convert name for display
+            break;
+          }
+        }
+
+        // Add the change, order, and matched pattern to history
+        history.unshift({ change, order: [...order], pattern: matchedPattern });
+
+        // Update the history table
+        const table = document.getElementById('history-table');
+        table.innerHTML = history
+          .map(
+            h =>
+              `<tr onclick="applyHistory('${h.order.join(' ')}')">
+                    <td>${h.change}</td>
+                    <td>${h.order
+                      .map(convertBellNumberForDisplay)
+                      .join('')}</td>
+                    <td>${
+                      h.pattern || ''
+                    }</td> <!-- Display matched pattern or '' -->
+                </tr>`
+          )
+          .join('');
+      }
+
+      function applyHistory(orderString) {
+        currentOrder = orderString.split(' ').map(convertDisplayToNumber);
+        updateDisplay();
+      }
+
+      /*********************** Bell Selection & Swap Functions ************************/
+      function selectBell(num) {
+        // If a pending swap is already queued, ignore further selections.
+        if (pendingSwap) return;
+        if (selectedBells.includes(num)) {
+          // Remove the bell from selection if it's already selected.
+          selectedBells = selectedBells.filter(n => n !== num);
+        } else {
+          selectedBells.push(num);
+          if (selectedBells.length === 2) {
+            validateSelection();
+          }
+        }
+        updateSelectionDisplay();
+      }
+
+      function updateSelectionDisplay() {
+        document
+          .querySelectorAll('#selection .selection-number')
+          .forEach(number => {
+            const n = parseInt(number.innerText);
+            if (selectedBells.includes(n)) {
+              number.classList.add('selected');
+            } else {
+              number.classList.remove('selected');
+            }
+          });
+      }
+
+      function validateSelection() {
+        const errorMessageDiv = document.getElementById('error-message');
+        const [first, second] = selectedBells;
+        const firstIndex = currentOrder.indexOf(first);
+        const secondIndex = currentOrder.indexOf(second);
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+
+        console.log('Calling Up Label Color:', callingUpLabel.style.color);
+        console.log('Is Calling Up:', isCallingUp);
+        console.log('First Bell:', first, 'Second Bell:', second);
+        console.log('First Index:', firstIndex, 'Second Index:', secondIndex);
+
+        if (isCallingUp) {
+          // When calling up, check for adjacent bells
+          if (Math.abs(firstIndex - secondIndex) !== 1) {
+            showError('You can only swap adjacent bells');
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+
+          // When calling up, first bell must be earlier than second
+          if (secondIndex < firstIndex) {
+            showError('Select bells in ascending order');
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+        } else {
+          // When calling down, prevent selecting second bell followed by first bell
+          if (firstIndex === 1 && secondIndex === 0) {
+            showError(
+              'Use the Lead button to move the bell in 2nds place into lead'
+            );
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+
+          // When calling down, prevent selecting adjacent bells
+          if (Math.abs(firstIndex - secondIndex) === 1) {
+            showError(
+              'Select the bell to move down, then the bell it should follow'
+            );
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+
+          // When calling down, first bell must be later in the change than the second
+          if (firstIndex < secondIndex) {
+            showError(
+              'Select the bell to move down, then the bell it should follow'
+            );
+            selectedBells = [];
+            updateSelectionDisplay();
+            return;
+          }
+        }
+
+        // Valid selection: highlight these bells and…
+        highlightSwappedBells(first, second);
+        if (isPlaying) {
+          // If playback is active, queue the swap and keep the highlight.
+          pendingSwap = [first, second];
+        } else {
+          // If not playing, swap immediately with isFromPlayback=false
+          swapBells(first, second, false);
+        }
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+
+        // Save current bell order text to restore later
+        const currentBellOrder = errorDiv.innerText;
+
+        // Display error message in red
+        errorDiv.style.color = 'darkred';
+        errorDiv.innerText = message;
+
+        // Restore bell order after 3 seconds
+        setTimeout(() => {
+          const selectedPattern =
+            document.getElementById('pattern-dropdown').value;
+          if (selectedPattern !== 'Choose Desired Pattern') {
+            const matchOrder = patterns[selectedPattern]?.[numBells] || [];
+            errorDiv.style.color = '#888';
+            // Add pattern name prefix to the bell order
+            const displayName =
+              selectedPattern === 'Exploding Tittums'
+                ? 'Exp. Tittums'
+                : selectedPattern;
+            errorDiv.innerText = `${displayName} = ${matchOrder
+              .map(convertBellNumberForDisplay)
+              .join(' ')}`;
+          } else {
+            errorDiv.innerText = ''; // Clear if no pattern is selected
+          }
+        }, 3000);
+      }
+
+      function highlightRecentSwap(a, b, shiftedBell) {
+        // Remove previous highlights
+        document.querySelectorAll('#current-order .bell').forEach(bell => {
+          bell.classList.remove('recent-swap');
+        });
+
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+
+        if (isCallingUp) {
+          // When calling up, highlight the swapped bells
+          document.querySelectorAll('#current-order .bell').forEach(bell => {
+            const bellNum = convertDisplayToNumber(bell.innerText);
+            if (bellNum === a || bellNum === b) {
+              bell.classList.add('recent-swap');
+            }
+          });
+        } else {
+          // When calling down, highlight the bell that moved and the bell that was shifted
+          document.querySelectorAll('#current-order .bell').forEach(bell => {
+            const bellNum = convertDisplayToNumber(bell.innerText);
+            if (bellNum === a || bellNum === shiftedBell) {
+              bell.classList.add('recent-swap');
+            }
+          });
+        }
+      }
+
+      function highlightSwappedBells(a, b) {
+        const bellA = document.getElementById(`bell-${a}`);
+        const bellB = document.getElementById(`bell-${b}`);
+        if (bellA) bellA.classList.add('selected');
+        if (bellB) bellB.classList.add('selected');
+      }
+
+      function clearHighlight() {
+        document.querySelectorAll('#selection .bell').forEach(bell => {
+          bell.classList.remove('highlight');
+        });
+      }
+
+      // swapBells: if playback is active and not forcing immediate swap,
+      // queue the swap; otherwise, apply it and then clear the selection/highlight.
+      function swapBells(a, b, isFromPlayback = false) {
+        if (!isFromPlayback && isPlaying) {
+          pendingSwap = [a, b];
+          return;
+        }
+
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const isCallingUp =
+          callingUpLabel.style.color === 'rgb(0, 123, 255)' ||
+          callingUpLabel.style.color === '#007bff';
+        const indexA = currentOrder.indexOf(a);
+        const indexB = currentOrder.indexOf(b);
+
+        // Calculate the shifted bell before the swap
+        const shiftedBell = isCallingUp ? null : currentOrder[indexB + 1];
+
+        if (isCallingUp) {
+          // When calling up, swap the bells
+          [currentOrder[indexA], currentOrder[indexB]] = [
+            currentOrder[indexB],
+            currentOrder[indexA],
+          ];
+          updateHistory(`${a} to ${b}`, currentOrder);
+        } else {
+          // When calling down, move bell a to position just after bell b
+          currentOrder.splice(indexA, 1);
+          currentOrder.splice(indexB + 1, 0, a);
+          updateHistory(`${a} to ${b}`, currentOrder);
+        }
+
+        updateDisplay();
+        highlightRecentSwap(a, b, shiftedBell);
+
+        if (isFromPlayback) {
+          // Clear selection immediately during playback
+          selectedBells = [];
+          updateSelectionDisplay();
+          clearHighlight();
+        } else {
+          // Keep the selection highlight for 1 second when not in playback
+          setTimeout(() => {
+            selectedBells = [];
+            updateSelectionDisplay();
+            clearHighlight();
+          }, 1000);
+        }
+      }
+
+      /*********************** Audio Playback Functions ************************/
+      let audioContext = null;
+      let isPlaying = false;
+      let pendingSwap = null; // Holds a valid swap requested during playback
+      let pendingStop = false; // Flag to indicate we should stop after sequence completes
+      let playbackTimeout;
+      let bellBuffers = new Array(12); // Array to store preloaded bell sound buffers
+      let activeSources = new Set(); // Keep track of currently playing sounds
+
+      // Calculate pan position for a bell number (-0.342 = 20° left, 0.342 = 20° right)
+      function calculatePanPosition(bellNumber, totalBells) {
+        // Map bell numbers to positions from -0.342 (20° left) to 0.342 (20° right)
+        const maxPan = 0.342; // sin(20°)
+        return -maxPan + ((bellNumber - 1) * 2 * maxPan) / (totalBells - 1);
+      }
+
+      // Function to preload all bell sound files
+      async function preloadBellSounds() {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+        }
+
+        try {
+          for (let i = 1; i <= 12; i++) {
+            const response = await fetch(`${i}.wav`);
+            const arrayBuffer = await response.arrayBuffer();
+            bellBuffers[i - 1] = await audioContext.decodeAudioData(
+              arrayBuffer
+            );
+          }
+          console.log('All bell sounds loaded successfully');
+        } catch (error) {
+          console.error('Error loading bell sounds:', error);
+          // If loading fails, force offline mode
+          document.getElementById('offline-mode-toggle').checked = true;
+        }
+      }
+
+      // Call preloadBellSounds when the page loads
+      window.addEventListener('load', preloadBellSounds);
+
+      // Map bell numbers to sound file indices based on the total number of bells
+      function getSoundIndex(bellNumber, totalBells) {
+        // Calculate how many steps down from 12 we need to go for bell 1
+        const offset = 12 - totalBells;
+        return offset + bellNumber - 1;
+      }
+
+      // Frequencies are hard coded (the first note corresponds to bell 1)
+      const bellFrequencies = {
+        5: [440, 392, 370, 330, 294], // A4, G4, F#4, E4, D4
+        6: [494, 440, 392, 370, 330, 294], // B4, A4, G4, F#4, E4, D4
+        8: [587, 554, 494, 440, 392, 370, 330, 294], // D5, C#5, B4, A4, G4, F#4, E4, D4
+        10: [740, 659, 587, 554, 494, 440, 392, 370, 330, 294], // F#5, E5, D5, C#5, B4, A4, G4, F#4, E4, D4
+        12: [880, 784, 740, 659, 587, 554, 494, 440, 392, 370, 330, 294], // A5, G5, F#5, E5, D5, C#5, B4, A4, G4, F#4, E4, D4
+      };
+
+      // Duration (in seconds) per bell stroke
+      const bellDurations = {
+        5: 0.3,
+        6: 0.28,
+        8: 0.26,
+        10: 0.24,
+        12: 0.22,
+      };
+
+      // Play a bell sound using either the synthesized tone (offline mode) or WAV file (online mode)
+      function playBellSound(bellNumber, duration) {
+        if (!audioContext) return;
+
+        const isOfflineMode = document.getElementById(
+          'offline-mode-toggle'
+        ).checked;
+        const spatialEnabled = document.getElementById(
+          'spatial-sound-toggle'
+        ).checked;
+
+        // Calculate pan position for this bell if spatial audio is enabled
+        const panPosition = spatialEnabled
+          ? calculatePanPosition(bellNumber, numBells)
+          : 0;
+
+        // Create stereo panner if spatial audio is enabled
+        const panner = spatialEnabled
+          ? audioContext.createStereoPanner()
+          : null;
+        if (panner) {
+          panner.pan.value = panPosition;
+          panner.connect(audioContext.destination);
+        }
+
+        if (isOfflineMode) {
+          // Use synthesized tone
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          const frequency = bellFrequencies[numBells][bellNumber - 1];
+
+          oscillator.type = 'triangle';
+          oscillator.frequency.setValueAtTime(
+            frequency,
+            audioContext.currentTime
+          );
+
+          gainNode.gain.setValueAtTime(1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + 1.0
+          );
+
+          // Connect through panner if spatial audio is enabled, otherwise directly to destination
+          oscillator.connect(gainNode);
+          if (panner) {
+            gainNode.connect(panner);
+          } else {
+            gainNode.connect(audioContext.destination);
+          }
+
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + duration);
+
+          // Add to active sources
+          activeSources.add(oscillator);
+          oscillator.onended = () => {
+            activeSources.delete(oscillator);
+          };
+        } else {
+          // Use WAV file
+          const soundIndex = getSoundIndex(bellNumber, numBells);
+          if (bellBuffers[soundIndex]) {
+            const source = audioContext.createBufferSource();
+            source.buffer = bellBuffers[soundIndex];
+
+            // Connect through panner if spatial audio is enabled, otherwise directly to destination
+            if (panner) {
+              source.connect(panner);
+            } else {
+              source.connect(audioContext.destination);
+            }
+
+            // Add to active sources before starting
+            activeSources.add(source);
+            source.onended = () => {
+              activeSources.delete(source);
+            };
+
+            source.start();
+          }
+        }
+      }
+
+      function playSequence() {
+        if (!isPlaying) {
+          // Remove stopping class when playback actually stops
+          const standButton = document.querySelector(
+            'button.bell-number-button[onclick="stopPlayback()"]'
+          );
+          standButton.classList.remove('stopping');
+          standButton.classList.remove('selected'); // Also remove selected class
+
+          // Clear selections and pendingSwap/pendingLead without applying them
+          selectedBells = [];
+          pendingSwap = null;
+          pendingLead = null;
+          updateSelectionDisplay();
+          clearHighlight();
+          // Remove selected state from lead button
+          document.querySelector('.lead-button').classList.remove('selected');
+
+          // If there's a pending bell count change, apply it now
+          if (pendingBellCount !== null) {
+            applyBellCount(pendingBellCount);
+          }
+          return;
+        }
+
+        const bellOrder = [...currentOrder, ...currentOrder];
+        const duration = bellDurations[numBells];
+        let index = 0;
+        let nextBellTime = audioContext.currentTime;
+
+        // Check if "Open Handstroke" is enabled
+        const openHandstrokeEnabled = document.getElementById(
+          'open-handstroke-toggle'
+        ).checked;
+        const spatialEnabled = document.getElementById(
+          'spatial-sound-toggle'
+        ).checked;
+
+        function playNextBell() {
+          if (!isPlaying) {
+            // Remove stopping class when playback actually stops
+            const standButton = document.querySelector(
+              'button.bell-number-button[onclick="stopPlayback()"]'
+            );
+            standButton.classList.remove('stopping');
+            standButton.classList.remove('selected'); // Also remove selected class
+            return;
+          }
+
+          if (index < bellOrder.length) {
+            const bell = bellOrder[index];
+
+            // Schedule the next bell sound at the precise time
+            const isOfflineMode = document.getElementById(
+              'offline-mode-toggle'
+            ).checked;
+            if (!isOfflineMode) {
+              // For online mode (WAV files), schedule precisely
+              const soundIndex = getSoundIndex(bell, numBells);
+              if (bellBuffers[soundIndex]) {
+                const source = audioContext.createBufferSource();
+                source.buffer = bellBuffers[soundIndex];
+
+                if (spatialEnabled) {
+                  // Create and configure panner if spatial audio is enabled
+                  const panner = audioContext.createStereoPanner();
+                  panner.pan.value = calculatePanPosition(bell, numBells);
+                  source.connect(panner);
+                  panner.connect(audioContext.destination);
+                } else {
+                  // Connect directly to destination if spatial audio is disabled
+                  source.connect(audioContext.destination);
+                }
+
+                // Add to active sources before starting
+                activeSources.add(source);
+                source.onended = () => {
+                  activeSources.delete(source);
+                };
+
+                // Schedule the sound to start at the exact time
+                source.start(nextBellTime);
+              }
+            } else {
+              // For offline mode, use the existing playBellSound function
+              playBellSound(bell, duration);
+            }
+
+            // Update the time for the next bell - use full duration for consistent timing
+            nextBellTime += duration;
+            index++;
+
+            // Schedule the next bell using the same full duration
+            playbackTimeout = setTimeout(playNextBell, duration * 1000);
+          } else {
+            // Sequence is complete
+            if (pendingStop) {
+              // If stop was requested, stop playback now
+              isPlaying = false;
+              pendingStop = false;
+              // Remove stopping class when playback stops
+              const standButton = document.querySelector(
+                'button.bell-number-button[onclick="stopPlayback()"]'
+              );
+              standButton.classList.remove('stopping');
+              standButton.classList.remove('selected'); // Also remove selected class
+
+              // Clear selections and pending changes without applying them
+              selectedBells = [];
+              pendingSwap = null;
+              pendingLead = null;
+              updateSelectionDisplay();
+              clearHighlight();
+              // Remove selected state from lead button
+              document
+                .querySelector('.lead-button')
+                .classList.remove('selected');
+
+              // If there's a pending bell count change, apply it now
+              if (pendingBellCount !== null) {
+                applyBellCount(pendingBellCount);
+              }
+              return;
+            }
+
+            // Pause for one bell duration only if "Open Handstroke" is enabled
+            if (openHandstrokeEnabled) {
+              playbackTimeout = setTimeout(() => {
+                // Only apply pending changes if we're not stopping
+                if (!pendingStop) {
+                  if (pendingSwap) {
+                    swapBells(pendingSwap[0], pendingSwap[1], true);
+                    pendingSwap = null;
+                  } else if (pendingLead) {
+                    applyLeadChange(pendingLead.bell, pendingLead.previousLead);
+                    pendingLead = null;
+                  }
+                }
+                playSequence();
+              }, duration * 1000);
+            } else {
+              // Skip pause and immediately restart sequence
+              // Only apply pending changes if we're not stopping
+              if (!pendingStop) {
+                if (pendingSwap) {
+                  swapBells(pendingSwap[0], pendingSwap[1], true);
+                  pendingSwap = null;
+                } else if (pendingLead) {
+                  applyLeadChange(pendingLead.bell, pendingLead.previousLead);
+                  pendingLead = null;
+                }
+              }
+              playSequence();
+            }
+          }
+        }
+
+        playNextBell();
+      }
+
+      function startPlayback() {
+        if (isPlaying) return;
+        if (!audioContext) {
+          audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+        }
+
+        pendingStop = false;
+        isPlaying = true;
+
+        // Ensure the AudioContext is in a running state before playing
+        audioContext
+          .resume()
+          .then(() => {
+            playSequence();
+          })
+          .catch(err => console.error('Error resuming audio context:', err));
+      }
+
+      function stopPlayback() {
+        if (!isPlaying) return;
+
+        // Set the pending stop flag instead of stopping immediately
+        pendingStop = true;
+
+        // Don't clear selections or pending swaps here - let playSequence handle it
+        // when playback actually stops, so the pending swap can be applied first
+
+        // Add stopping class to Stand button
+        const standButton = document.querySelector(
+          'button.bell-number-button[onclick="stopPlayback()"]'
+        );
+        standButton.classList.add('stopping');
+      }
+
+      /*********************** Initialize Default State ************************/
+      // Initialize with 6 bells by default
+      setBells(6);
+
+      function resetSimulator() {
+        // Reset the pattern dropdown to default
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
+        // Reset the current order to the default for current number of bells
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+
+        // Clear history except for the initial "Go!" entry
+        history = [];
+        updateHistory('Go!', currentOrder);
+
+        // Update the display
+        updateDisplay();
+
+        // Clear any error messages
+        document.getElementById('error-message').innerText = '';
+
+        // Clear any selected bells
+        selectedBells = [];
+        updateSelectionDisplay();
+        clearHighlight();
+
+        // Stop any ongoing playback
+        stopPlayback();
+      }
+
+      function toggleOptionsBox() {
+        const optionsBox = document.getElementById('options-box');
+        const overlay = document.getElementById('overlay');
+        if (
+          optionsBox.style.display === 'none' ||
+          optionsBox.style.display === ''
+        ) {
+          optionsBox.style.display = 'block';
+          overlay.style.display = 'block';
+        } else {
+          optionsBox.style.display = 'none';
+          overlay.style.display = 'none';
+        }
+      }
+
+      // Close options box when clicking outside
+      document.addEventListener('DOMContentLoaded', function () {
+        const optionsBox = document.getElementById('options-box');
+        const optionsIcon = document.getElementById('options-icon');
+        const patternsBox = document.getElementById('patterns-box');
+        const infoBox = document.getElementById('info-box');
+        const overlay = document.getElementById('overlay');
+
+        // Function to close all popups
+        function closeAllPopups() {
+          optionsBox.style.display = 'none';
+          patternsBox.style.display = 'none';
+          infoBox.style.display = 'none';
+          overlay.style.display = 'none';
+        }
+
+        // Add click handler for the overlay
+        overlay.addEventListener('click', function (event) {
+          // Only close if clicking directly on the overlay (not its children)
+          if (event.target === overlay) {
+            closeAllPopups();
+          }
+        });
+
+        // Add click handlers for the popup boxes
+        if (optionsBox) {
+          optionsBox.addEventListener('click', function (event) {
+            event.stopPropagation();
+          });
+        }
+
+        if (patternsBox) {
+          patternsBox.addEventListener('click', function (event) {
+            event.stopPropagation();
+          });
+        }
+
+        if (infoBox) {
+          infoBox.addEventListener('click', function (event) {
+            event.stopPropagation();
+          });
+        }
+      });
+
+      function togglePatternsBox() {
+        const patternsBox = document.getElementById('patterns-box');
+        const overlay = document.getElementById('overlay');
+        if (
+          patternsBox.style.display === 'none' ||
+          patternsBox.style.display === ''
+        ) {
+          patternsBox.style.display = 'block';
+          overlay.style.display = 'block';
+          displayPatterns(numBells); // Only update patterns when opening
+        } else {
+          patternsBox.style.display = 'none';
+          overlay.style.display = 'none';
+          // Reset scroll position when closing
+          patternsBox.scrollTop = 0;
+        }
+      }
+
+      function displayPatterns(count) {
+        const patternsDisplay = document.getElementById('patternsDisplay');
+        patternsDisplay.innerHTML = '';
+
+        // Update button states
+        document.querySelectorAll('.patterns-bell-button').forEach(button => {
+          const buttonCount = parseInt(button.textContent);
+          button.classList.toggle('selected', buttonCount === count);
+        });
+
+        for (const [name, orders] of Object.entries(patterns)) {
+          if (orders[count]) {
+            const patternDiv = document.createElement('div');
+            patternDiv.classList.add('pattern');
+            patternDiv.style.cursor = 'pointer'; // Add pointer cursor to indicate clickable
+            patternDiv.onclick = () => selectPattern(name, count); // Pass the count to selectPattern
+
+            const patternName = document.createElement('div');
+            patternName.classList.add('pattern-name');
+            patternName.textContent =
+              name === 'Exploding Tittums' ? 'Exp. Tittums' : name;
+
+            const patternOrder = document.createElement('div');
+            patternOrder.classList.add('pattern-order');
+            patternOrder.textContent = orders[count]
+              .map(convertBellNumberForDisplay)
+              .join(''); // Remove space between bell numbers
+
+            patternDiv.appendChild(patternName);
+            patternDiv.appendChild(patternOrder);
+            patternsDisplay.appendChild(patternDiv);
+          }
+        }
+      }
+
+      function selectPattern(patternName, count) {
+        // Close the patterns box and reset scroll position immediately
+        const patternsBox = document.getElementById('patterns-box');
+        patternsBox.style.display = 'none';
+        patternsBox.scrollTop = 0;
+        document.getElementById('overlay').style.display = 'none';
+
+        // Scroll the main window to the top immediately
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        if (count !== numBells) {
+          // Store the pattern name before changing bell count
+          pendingPattern = patternName;
+          // Update selected state of bell number buttons immediately
+          document.querySelectorAll('.bell-number-button').forEach(button => {
+            const buttonCount = parseInt(button.textContent);
+            if (!isNaN(buttonCount)) {
+              // Only toggle if it's a bell number button
+              button.classList.toggle('selected', buttonCount === count);
+            }
+          });
+          setBells(count);
+          return;
+        }
+
+        // Apply pattern immediately if bell count matches
+        applyPattern(patternName);
+      }
+
+      function applyPattern(patternName) {
+        // Update the pattern dropdown
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = patternName;
+
+        // Update the pattern highlighting
+        updatePatternHighlighting();
+      }
+
+      function handleLeadBell() {
+        if (selectedBells.length !== 1) {
+          showError('Select the bell in 2nds place then click "Lead"');
+          return;
+        }
+
+        const bell = selectedBells[0];
+        const bellIndex = currentOrder.indexOf(bell);
+
+        // Only allow the second bell to be moved to Lead
+        if (bellIndex !== 1) {
+          showError(
+            'Only the bell currently in 2nds place can be called into Lead'
+          );
+          selectedBells = [];
+          updateSelectionDisplay();
+          return;
+        }
+
+        // Get the bell that was previously in Lead position
+        const previousLead = currentOrder[0];
+
+        if (isPlaying) {
+          // If playback is active, queue the lead change and add selected state to button
+          pendingLead = { bell, previousLead };
+          document.querySelector('.lead-button').classList.add('selected');
+          return;
+        }
+
+        // If not playing, apply the lead change immediately but keep the selection for 1 second
+        document.querySelector('.lead-button').classList.add('selected');
+        // Keep the selectedBells array as is - it will be cleared by the timeout in applyLeadChange
+        applyLeadChange(bell, previousLead);
+      }
+
+      function applyLeadChange(bell, previousLead) {
+        const bellIndex = currentOrder.indexOf(bell);
+        // Move the selected bell to the front
+        currentOrder.splice(bellIndex, 1);
+        currentOrder.unshift(bell);
+
+        updateHistory(`${bell} Lead`, currentOrder);
+        updateDisplay();
+        highlightRecentSwap(bell, previousLead, previousLead);
+
+        if (isPlaying) {
+          // Clear selection immediately during playback
+          selectedBells = [];
+          updateSelectionDisplay();
+          document.querySelector('.lead-button').classList.remove('selected');
+        } else {
+          // Keep both the bell selection and lead button highlight for 1 second when not in playback
+          // Re-highlight the bell in case updateDisplay cleared it
+          document.getElementById(`bell-${bell}`).classList.add('selected');
+          setTimeout(() => {
+            selectedBells = [];
+            updateSelectionDisplay();
+            document.querySelector('.lead-button').classList.remove('selected');
+          }, 1000);
+        }
+      }
+
+      function setCallingStyle(isCallingUp) {
+        const callingUpLabel = document.getElementById('calling-up-label');
+        const callingDownLabel = document.getElementById('calling-down-label');
+        const leadContainer = document.getElementById('lead-container');
+
+        // Update the label colors based on the selection
+        callingUpLabel.style.color = isCallingUp ? '#007bff' : '#ccc';
+        callingDownLabel.style.color = isCallingUp ? '#ccc' : '#007bff';
+
+        // Show/hide the Lead button based on calling style
+        leadContainer.style.display = isCallingUp ? 'none' : 'block';
+
+        // Reset the simulator state
+        // Reset the pattern dropdown to default
+        const dropdown = document.getElementById('pattern-dropdown');
+        dropdown.value = 'Choose Desired Pattern';
+
+        // Reset the current order to the default for current number of bells
+        currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+
+        // Clear history except for the initial "Go!" entry
+        history = [];
+        updateHistory('Go!', currentOrder);
+
+        // Update the display
+        updateDisplay();
+
+        // Clear any error messages
+        document.getElementById('error-message').innerText = '';
+
+        // Clear any selected bells
+        selectedBells = [];
+        updateSelectionDisplay();
+        clearHighlight();
+
+        // Stop any ongoing playback
+        stopPlayback();
+      }
+
+      function updateCallingStyle() {
+        const isCallingUp = !document.getElementById('open-handstroke-toggle')
+          .checked;
+        setCallingStyle(isCallingUp);
+      }
+
+      function updatePatternsDisplay(count) {
+        displayPatterns(count);
+      }
+    </script>
+  </body>
+</html>
