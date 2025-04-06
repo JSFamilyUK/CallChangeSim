@@ -2724,6 +2724,17 @@
                 ).style.display = 'none';
               }
               break;
+            case 'bells':
+              // Reset bells to rounds order
+              currentOrder = Array.from({ length: numBells }, (_, i) => i + 1);
+              selectedBells = [];
+              updateDisplay();
+              updateHistory('Go!', currentOrder);
+              // Hide the pending pattern rounds notification
+              document.getElementById(
+                'pending-rounds-notification'
+              ).style.display = 'none';
+              break;
             case 'patterns':
               // Reset to first pattern in sequence without clearing the sequence
               if (patternSequence.length > 0) {
