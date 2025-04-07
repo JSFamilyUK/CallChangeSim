@@ -3574,13 +3574,6 @@
       }
 
       function confirmPatternSequence() {
-        // Hide the target icon when sequence starts
-        const targetIcon = document.querySelector(
-          '.options-icon[onclick="resetToSelectedPattern()"]'
-        );
-        if (targetIcon && patternSequence.length !== 1) {
-          targetIcon.style.display = 'none';
-        }
         if (patternSequence.length > 0) {
           // Get the currently selected bell count from the patterns dialog
           const selectedBellButton = document.querySelector(
@@ -3667,6 +3660,9 @@
         const clearSequenceButton = document.getElementById(
           'clear-sequence-button'
         );
+        const targetIcon = document.querySelector(
+          '.options-icon[onclick="resetToSelectedPattern()"]'
+        );
 
         if (patternSequence.length > 1) {
           if (!existingCounter) {
@@ -3681,15 +3677,18 @@
             counter.style.cursor = 'pointer';
             counter.onclick = showSequencePopup;
             errorMessageDiv.appendChild(counter);
+            targetIcon.style.display = 'none';
           } else {
             existingCounter.innerHTML = `Pattern <span id="current-pattern-number">${
               currentPatternIndex + 1
             }</span> of ${patternSequence.length}`;
+            targetIcon.style.display = 'none';
           }
         } else {
           if (existingCounter) {
             existingCounter.remove();
           }
+          targetIcon.style.display = 'block';
         }
       }
 
