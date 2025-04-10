@@ -2826,6 +2826,14 @@
                 'pending-full-reset-notification'
               ).style.display = 'none';
 
+              //Display the target icon
+              const targetIcon = document.querySelector(
+                '.options-icon[onclick="resetToSelectedPattern()"]'
+              );
+              if (targetIcon) {
+                targetIcon.style.display = 'block';
+              }
+
               isPlaying = false;
               break;
           }
