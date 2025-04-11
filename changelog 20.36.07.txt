@@ -395,11 +395,28 @@ V9.0 - 03/04/25
     Additional functionality added to support guided call changes
         - New icon for target current pattern (jump change) linked to pattern-dropdown in main simulator
         - Icon placement set to be between patterns and options icons
-        - Add code to reset current bell pattern to the pattern selected in the pattern drop down. Enables starting changes in any valid pattern
+        - Add code to reset current bell pattern to the pattern selected in the pattern drop down. 
+            Enables starting changes in any valid pattern
         - New resetting pattern notification for jump change icon click during playback
         - Add code to handle additional pending behaviour linked to jump change icon
         - Hide target/jump change icon when pattern sequence with >1 pattern is loaded into main simulator
+            Behaviour linked to display of pattern sequence counter
         - Display when hide condition is no longer met
         - Wording change for prompt in pattern sequence box
         - Version number update
-        
+
+V9.1 - 11/04/25
+    Usability fixes
+        - Fixes to notification display concurrency
+            New function monitors the display of any notifications
+            Prevents clickthrough to existing buttons and menus
+            Enables clickthrough again when the notification is dismissed
+            Prevents more than one pending action at once
+            Prevents notifications failing to dismiss
+        - Version number update
+
+V9.2 - 11/04/25
+    Help Menu updates
+        - Added entries for the Research and Jump change icon
+        - Removed unnecessary items to provide more space
+        - Reworded existing items to add clarity
