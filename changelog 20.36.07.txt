@@ -420,3 +420,4 @@ V9.2 - 11/04/25
         - Added entries for the Research and Jump change icon
         - Removed unnecessary items to provide more space
         - Reworded existing items to add clarity
+        - Version update
