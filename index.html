@@ -1732,7 +1732,7 @@
     <div class="image-wrapper">
       <br />
       <span class="center-text"
-        >v9.0 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+        >v9.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
           >contact@callchangesim.co.uk</a
         ></span
       >
@@ -3023,15 +3023,21 @@
         // Set the pending stop flag instead of stopping immediately
         pendingStop = true;
 
-        // Show the pending stand notification
-        document.getElementById('pending-stand-notification').style.display =
-          'flex';
+        // Don't clear selections or pending swaps here - let playSequence handle it
+        // when playback actually stops, so the pending swap can be applied first
 
         // Add stopping class to Stand button
         const standButton = document.querySelector(
           'button.bell-number-button[onclick="stopPlayback()"]'
         );
         standButton.classList.add('stopping');
+
+        // Hide all other notifications and show the stand notification
+        hideAllNotifications();
+        const standNotification = document.getElementById(
+          'pending-stand-notification'
+        );
+        standNotification.style.display = 'block';
       }
 
       /*********************** Initialize Default State ************************/
@@ -3768,10 +3774,13 @@
         if (isPlaying) {
           // If playback is active, queue the reset without stopping playback
           pendingReset = 'bells';
-          const notification = document.getElementById(
+
+          // Hide all other notifications and show the rounds notification
+          hideAllNotifications();
+          const roundsNotification = document.getElementById(
             'pending-rounds-notification'
           );
-          notification.style.display = 'flex';
+          roundsNotification.style.display = 'block';
           return;
         }
 
@@ -4608,6 +4617,54 @@
           }
         }
       }
+
+      // Add this function to check for visible notifications
+      function isNotificationVisible() {
+        const notificationIds = [
+          'pending-stand-notification',
+          'pending-pattern-restart-notification',
+          'pending-rounds-notification',
+          'pending-full-reset-notification',
+          'pending-pattern-reset-notification',
+        ];
+
+        return notificationIds.some(id => {
+          const notification = document.getElementById(id);
+          return notification && notification.style.display === 'block';
+        });
+      }
+
+      function hideAllNotifications() {
+        const notificationIds = [
+          'pending-stand-notification',
+          'pending-pattern-restart-notification',
+          'pending-rounds-notification',
+          'pending-full-reset-notification',
+          'pending-pattern-reset-notification',
+        ];
+
+        notificationIds.forEach(id => {
+          const notification = document.getElementById(id);
+          if (notification) {
+            notification.style.display = 'none';
+          }
+        });
+      }
+
+      // Add this function to handle click events
+      function handleClick(event) {
+        if (isNotificationVisible()) {
+          event.preventDefault();
+          event.stopPropagation();
+          return false;
+        }
+        return true;
+      }
+
+      // Add event listeners for click events
+      document.addEventListener('click', handleClick, true);
+      document.addEventListener('mousedown', handleClick, true);
+      document.addEventListener('touchstart', handleClick, true);
     </script>
   </body>
 </html>

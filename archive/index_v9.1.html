@@ -1685,8 +1685,8 @@
             />
           </svg>
           <span
-            >The Patterns icon is used to view and select common patterns on
-            your chosen number of bells</span
+            >Patterns: Research bell orders, select a single change or build
+            call change sequences for practice</span
           >
         </li>
         <li>
@@ -1701,8 +1701,8 @@
             />
           </svg>
           <span>
-            The Options icon is used to choose your calling style, whether you
-            want a Handstroke Gap and other playback options
+            Options: Choose your calling style, whether you want a Handstroke
+            Gap and other playback options
           </span>
         </li>
         <li>
@@ -1717,15 +1717,11 @@
             />
           </svg>
           <span>
-            The Reset icon moves the bells back to their default order and
-            clears the change history
+            Reset: Reset a call change sequence or reset the bells back to their
+            default order and clear the change history
           </span>
         </li>
         <li>Practice with or without the bells playing</li>
-        <li>
-          Select offline mode to use tones instead of bell sounds when there's
-          no signal
-        </li>
         <li>Bells 10, 11 and 12 are represented by 0, E and T respectively</li>
         <li>Calling errors will be displayed on the screen</li>
         <li>If there's no sound, check your phone isn't in silent mode</li>
@@ -1736,7 +1732,7 @@
     <div class="image-wrapper">
       <br />
       <span class="center-text"
-        >v9.0 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+        >v9.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
           >contact@callchangesim.co.uk</a
         ></span
       >
@@ -2830,6 +2826,14 @@
                 'pending-full-reset-notification'
               ).style.display = 'none';
 
+              //Display the target icon
+              const targetIcon = document.querySelector(
+                '.options-icon[onclick="resetToSelectedPattern()"]'
+              );
+              if (targetIcon) {
+                targetIcon.style.display = 'block';
+              }
+
               isPlaying = false;
               break;
           }
@@ -3019,15 +3023,21 @@
         // Set the pending stop flag instead of stopping immediately
         pendingStop = true;
 
-        // Show the pending stand notification
-        document.getElementById('pending-stand-notification').style.display =
-          'flex';
+        // Don't clear selections or pending swaps here - let playSequence handle it
+        // when playback actually stops, so the pending swap can be applied first
 
         // Add stopping class to Stand button
         const standButton = document.querySelector(
           'button.bell-number-button[onclick="stopPlayback()"]'
         );
         standButton.classList.add('stopping');
+
+        // Hide all other notifications and show the stand notification
+        hideAllNotifications();
+        const standNotification = document.getElementById(
+          'pending-stand-notification'
+        );
+        standNotification.style.display = 'block';
       }
 
       /*********************** Initialize Default State ************************/
@@ -3578,13 +3588,6 @@
       }
 
       function confirmPatternSequence() {
-        // Hide the target icon when sequence starts
-        const targetIcon = document.querySelector(
-          '.options-icon[onclick="resetToSelectedPattern()"]'
-        );
-        if (targetIcon && patternSequence.length !== 1) {
-          targetIcon.style.display = 'none';
-        }
         if (patternSequence.length > 0) {
           // Get the currently selected bell count from the patterns dialog
           const selectedBellButton = document.querySelector(
@@ -3671,6 +3674,9 @@
         const clearSequenceButton = document.getElementById(
           'clear-sequence-button'
         );
+        const targetIcon = document.querySelector(
+          '.options-icon[onclick="resetToSelectedPattern()"]'
+        );
 
         if (patternSequence.length > 1) {
           if (!existingCounter) {
@@ -3685,15 +3691,18 @@
             counter.style.cursor = 'pointer';
             counter.onclick = showSequencePopup;
             errorMessageDiv.appendChild(counter);
+            targetIcon.style.display = 'none';
           } else {
             existingCounter.innerHTML = `Pattern <span id="current-pattern-number">${
               currentPatternIndex + 1
             }</span> of ${patternSequence.length}`;
+            targetIcon.style.display = 'none';
           }
         } else {
           if (existingCounter) {
             existingCounter.remove();
           }
+          targetIcon.style.display = 'block';
         }
       }
 
@@ -3765,10 +3774,13 @@
         if (isPlaying) {
           // If playback is active, queue the reset without stopping playback
           pendingReset = 'bells';
-          const notification = document.getElementById(
+
+          // Hide all other notifications and show the rounds notification
+          hideAllNotifications();
+          const roundsNotification = document.getElementById(
             'pending-rounds-notification'
           );
-          notification.style.display = 'flex';
+          roundsNotification.style.display = 'block';
           return;
         }
 
@@ -4605,6 +4617,54 @@
           }
         }
       }
+
+      // Add this function to check for visible notifications
+      function isNotificationVisible() {
+        const notificationIds = [
+          'pending-stand-notification',
+          'pending-pattern-restart-notification',
+          'pending-rounds-notification',
+          'pending-full-reset-notification',
+          'pending-pattern-reset-notification',
+        ];
+
+        return notificationIds.some(id => {
+          const notification = document.getElementById(id);
+          return notification && notification.style.display === 'block';
+        });
+      }
+
+      function hideAllNotifications() {
+        const notificationIds = [
+          'pending-stand-notification',
+          'pending-pattern-restart-notification',
+          'pending-rounds-notification',
+          'pending-full-reset-notification',
+          'pending-pattern-reset-notification',
+        ];
+
+        notificationIds.forEach(id => {
+          const notification = document.getElementById(id);
+          if (notification) {
+            notification.style.display = 'none';
+          }
+        });
+      }
+
+      // Add this function to handle click events
+      function handleClick(event) {
+        if (isNotificationVisible()) {
+          event.preventDefault();
+          event.stopPropagation();
+          return false;
+        }
+        return true;
+      }
+
+      // Add event listeners for click events
+      document.addEventListener('click', handleClick, true);
+      document.addEventListener('mousedown', handleClick, true);
+      document.addEventListener('touchstart', handleClick, true);
     </script>
   </body>
 </html>
