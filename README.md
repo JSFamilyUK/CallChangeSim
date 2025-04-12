@@ -24,7 +24,7 @@ The current order of bells is displayed in a row, with visual indicators for:
 - Recently swapped bells (red border)
 - Bells in their correct position for the target pattern (light green background)
 
-### Pattern Controls
+### Pattern Selection
 
 The pattern dropdown allows you to select a target pattern. When a pattern is selected, bells will be highlighted in green when they reach their correct position.
 
