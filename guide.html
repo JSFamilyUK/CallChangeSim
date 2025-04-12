@@ -169,7 +169,7 @@
           number of bells (5, 6, 8, 10, or 12). These determine how many bells
           you'll be working with.
         </p>
-        <div class="button-example">6 Bells</div>
+        <img src="guide_bellButtons.jpg" alt="Bell number selection buttons" max width="400px">
       </div>
 
       
@@ -283,6 +283,7 @@
       <div id="bell-selection">
         <h3>Bell Selection Area</h3>
         <p>The bell selection area is where you interact with the bells and make call changes:</p>
+        <img src="guide_bellSelection.jpeg" alt="Bell selection area" max width="400px">
         <ul>
           <li>
             <strong>Bell Selection Icons</strong>:
@@ -291,8 +292,8 @@
               <li>Icons are arranged in a row, showing the current order of the bells</li>
               <li>When you click a bell, it becomes highlighted with a blue background and white text</li>
               <li>You can select up to two bells at a time for making changes</li>
-              <li>When calling down, a "Lead" button appears between the selected bells</li>
-              <li>Clicking the Lead button confirms the change</li>
+              <li>The selection will be applied at the next handstroke if the bells are playing, or immediately if not</li>
+              <li>When calling down, a "Lead" button will also be visible</li>
             </ul>
           </li>
           <li>
@@ -316,17 +317,19 @@
           The Reference Box is a powerful tool for learning call change
           sequences. When you open it, you'll see:
         </p>
+        <img src="guide_referenceBox.jpg" alt="Reference Box" max width="400px">
         <ul>
           <li>
-            <strong>Bell Number Selection</strong> - Choose between 5-12 bells.
-            This selection is synchronized with the main simulator - changing it
-            here will update the number of bells in the main interface.
+            <strong>Bell Number Selection</strong> - Choose the number of bells to use
+            <ul><li>The Reference Box bell number will always inherit the current number of bells in the main simulator when it opens</li>
+            </li>
+            </ul>
           </li>
           <li>
-            <strong>Calling Style Selection</strong> - Toggle between "Calling
-            Up" and "Calling Down". This setting is also synchronized with the
-            main simulator's options. The choice affects how changes are called:
+            <strong>Calling Style Selection</strong> - Choose whether you want to use the "Calling Up" or "Calling Down" style
             <ul>
+                <li>This setting is synchronised with the
+                    main simulator's options.</li>
               <li>
                 Calling Up: The lower-numbered bell is called up (e.g., "2 to
                 1")
@@ -338,7 +341,7 @@
             </ul>
           </li>
           <li>
-            <strong>Pattern Selection</strong> - Two dropdown menus:
+            <strong>Pattern Selection</strong> - Set your patterns in the two dropdown menus:
             <ul>
               <li>
                 Start Pattern: Select your starting pattern (e.g., Rounds)
@@ -347,13 +350,11 @@
             </ul>
           </li>
           <li>
-            <strong>Sequence Display</strong> - Shows the complete sequence of
-            changes needed to get from the start pattern to the end pattern.
-            Each change is displayed with:
+            <strong>Example Change Sequence</strong> - Shows the following for each change needed to get from the start pattern to the end pattern
             <ul>
               <li>The call (e.g., "2 to 1")</li>
-              <li>The resulting pattern</li>
-              <li>Visual indicators for recently swapped bells</li>
+              <li>The resulting pattern after the call has been made</li>
+              <li>Which line in the example, if any, matches the current bell order in the simulator (Matches are highlighted with a green border)</li>
             </ul>
           </li>
         </ul>
@@ -365,8 +366,15 @@
           The Patterns Box allows you to select and work with different
           patterns. When you open it, you'll see:
         </p>
+        <img src="guide_patternsBox.jpg" alt="Patterns Box" max width="400px">
         <ul>
           <li>
+            <strong>Custom Call Change Sequence button</strong>:
+            <ul>
+              <li>
+                Used to open the Custom Call Change Sequence builder
+              </li>
+            </ul>
             <strong>Pattern Selection Interface</strong>:
             <ul>
               <li>
@@ -375,9 +383,6 @@
               <li>
                 Each pattern shows its name and the actual bell order for that
                 pattern
-              </li>
-              <li>
-                Patterns are filtered based on the current number of bells
               </li>
               <li>
                 Clicking a pattern immediately loads it into the simulator
@@ -390,9 +395,10 @@
           The Pattern Sequence Builder is a tool for creating custom sequences
           of patterns:
         </p>
+        <img src="guide_patternSequenceBox.jpg" alt="Pattern Sequence Builder" max width="400px">
         <ul>
           <li>
-            <strong>Pattern Box Controls</strong>:
+            <strong>Sequence Builder Controls</strong>:
             <ul>
               <li>Start Sequence button to begin the sequence</li>
               <li>Undo button to remove the last added pattern</li>
@@ -408,13 +414,14 @@
               <li>The undo button removes the last pattern added</li>
               <li>The sequence numbers are displayed on the right</li>
               <li>
-                When your pattern sequence is complete, click "Start Sequence"
+                When your sequence is ready, click "Start Sequence"
                 to load it into the simulator
               </li>
             </ul>
           </li>
           <li>
-            <strong>Sequence Counter</strong>:
+            <strong>Sequence Counter</strong>:<br />
+            <img src="guide_sequenceCounter.jpg" alt="Sequence Counter" max width="400px">
             <ul>
               <li>Appears in the main interface when a sequence is active</li>
               <li>Shows the current pattern number in the sequence</li>
@@ -422,7 +429,8 @@
             </ul>
           </li>
           <li>
-            <strong>Sequence Popup</strong>:
+            <strong>Sequence Popup</strong>:<br />
+            <img src="guide_sequencePopup.jpg" alt="Sequence Popup" max width="400px">
             <ul>
               <li>Displays the complete sequence of patterns</li>
               <li>Highlights the current pattern in green</li>
@@ -448,6 +456,7 @@
           The Options menu provides important settings that affect how the
           simulator works:
         </p>
+        <img src="guide_options.jpg" alt="Options Menu" max width="400px">
         <ul>
           <li>
             <strong>Calling Style</strong>:
@@ -462,22 +471,23 @@
               </ul>
           </li>
           <li>
-            <strong>Spatial Sound</strong>:
-            <ul>
-                <li>Adds subtle 3D stereo effect - best used with headphones</li>
-              </ul>
-          </li>
-          <li>
             <strong>Offline Mode</strong>:
             <ul>
               <li>Choose realistic bells sounds or generated tones</li>
             </ul>
+          </li>
+          <li>
+            <strong>Spatial Sound</strong>:
+            <ul>
+                <li>Adds subtle 3D stereo effect - best used with headphones</li>
+              </ul>
           </li>
         </ul>
       </div>
       <div id="reset-options">
         <h3>Resetting</h3>
         <p>The simulator provides two main reset options:</p>
+        <img src="guide_reset.jpg" alt="Reset Options" max width="400px">
         <ul>
           <li>
             <strong>Restart Pattern</strong>:
@@ -505,43 +515,38 @@
         <p>The simulator can be used in two modes:</p>
         <ul>
           <li>
-            <strong>Silent Mode</strong>:
+            <strong>Without Bells</strong>:
             <ul>
-              <li>Use without playback for silent practice</li>
+              <li>Use without sound for silent practice</li>
               <li>
                 Ideal for following along at practices or where sounds are not
                 appropriate
               </li>
+              <li>Bell selections and other changes are applied immediately</li>
               <li>All features remain available without sound</li>
             </ul>
           </li>
           <li>
-            <strong>Playback Mode</strong>:
+            <strong>With Bells</strong>:
             <ul>
               <li>Use with sound for a more realistic experience</li>
-              <li>Helps with timing and rhythm</li>
-              <li>Can be toggled on/off using the playback controls</li>
+              <li>Higher numbers of bells have a faster peal speed</li>
+              <li>Bell selections and other changes are applied at the next handstroke</li>
             </ul>
           </li>
         </ul>
-        <p>To call changes:</p>
-        <ol>
+        <strong>To call changes:</strong>
+        <ul>
+            <li>Use the Go button to begin playback if desired</li>
           <li>
             Select the bells you want to swap according to the rules of your
             chosen calling style
           </li>
-          <li>The swap will occur on the next handstroke</li>
-          <li>Use the Go/Stand buttons to control playback if desired</li>
-        </ol>
-        <p>The calling style (Up/Down) affects how changes are called:</p>
-        <ul>
-          <li>
-            Calling Up: Follow the rules for calling up (e.g., adjacent bells)
-          </li>
-          <li>Calling Down: Follow the rules for calling down</li>
+          <li>The selection will be checked against the calling style rules and applied if it is valid</li>
+          <li>Any errors will displayed at the bottom of the bell selection area</li>
         </ul>
         <p>
-          Remember to always follow the rules appropriate for your selected
+          Remember to follow the rules for your selected
           calling style.
         </p>
       </div>
@@ -555,14 +560,14 @@
             <ul>
               <li>Starts the ringing sequence</li>
               <li>Only visible when the simulator is in a stopped state</li>
-              <li>When clicked, the bells will begin ringing</li>
+              <li>Once the bells begin ringing, the Go button will be hidden</li>
             </ul>
           </li>
           <li>
             <strong>Stand Button</strong>:
             <ul>
               <li>Stops the ringing sequence</li>
-              <li>Only visible when the simulator is in a ringing state</li>
+              <li>Only visible when the bells are ringing</li>
               <li>When clicked, a Stand notification will be displayed</li>
               <li>The bells will stop at the next handstroke</li>
             </ul>
@@ -570,7 +575,6 @@
           <li>
             <strong>Rounds Button</strong>:
             <ul>
-              <li>Returns the bells to rounds (1234...)</li>
               <li>Only visible when the bells are not in Rounds order</li>
               <li>When clicked, a Rounds notification will be displayed</li>
               <li>The bells will return to rounds at the next handstroke</li>
@@ -582,9 +586,9 @@
         </p>
         <ul>
           <li>Stand and Rounds actions are applied at the next handstroke</li>
-          <li>When a control is clicked, a notification will appear showing the pending action</li>
+          <li>If the bells are ringing, a notification will appear showing the pending action</li>
           <li>The notification will remain visible until the action is applied at the next handstroke</li>
-          <li>You cannot click a different control while the previous action is still in progress</li>
+          <li>You cannot perform a new action while the previous action is still in progress</li>
         </ul>
       </div>
       <div id="options">
@@ -659,23 +663,7 @@
             </ul>
           </li>
           <li>
-            <strong>Pattern Sequences</strong>:
-            <ul>
-              <li>
-                Use the Pattern Sequence Builder to create sequences of multiple
-                patterns
-              </li>
-              <li>
-                You can include the same pattern multiple times in a sequence
-              </li>
-              <li>
-                The simulator will automatically progress through the sequence
-                as you achieve each pattern
-              </li>
-            </ul>
-          </li>
-          <li>
-            <strong>Pattern Transitions</strong>:
+            <strong>Pattern Pairs</strong>:
             <ul>
               <li>
                 Use the Reference Box to get suggested routes between patterns
@@ -690,22 +678,36 @@
               </li>
             </ul>
           </li>
+          <li>
+            <strong>Pattern Sequences</strong>:
+            <ul>
+              <li>
+                Use the Pattern Sequence Builder to create sequences with multiple
+                patterns
+              </li>
+              <li>
+                You can include the same pattern multiple times in a sequence
+              </li>
+              <li>
+                The simulator will automatically progress through the sequence
+                as you achieve each pattern
+              </li>
+            </ul>
+          </li>
         </ul>
       </div>
 
       <div id="pattern-sequences">
         <h3>Pattern Sequences</h3>
         <p>To create and use pattern sequences:</p>
-        <ol>
+        <ul>
           <li>
             <strong>Starting a New Sequence</strong>:
             <ul>
+                <li>Open the patterns box from the icon in the main simulator</li>
               <li>
-                Click the "Custom Call Change Sequence" button in the main
-                interface
+                Click the "Custom Call Change Sequence" button to open the sequence builder
               </li>
-              <li>This opens the Pattern Sequence Box</li>
-              <li>You will automatically start in Rounds</li>
             </ul>
           </li>
           <li>
@@ -718,12 +720,13 @@
             </ul>
           </li>
           <li>
-            <strong>Using the Sequence</strong>:
+            <strong>Starting the Sequence</strong>:
             <ul>
               <li>Click "Start Sequence" when you're ready to begin</li>
               <li>
                 The sequence will be immediately available in the main simulator
               </li>
+              <li>The bells will always begin in Rounds</li>
               <li>
                 Make call changes in the simulator to achieve each pattern in
                 sequence
@@ -732,40 +735,51 @@
                 The simulator will automatically progress to the next pattern
                 when you achieve the current one
               </li>
-              <li>Use the Reference Box alongside for guidance</li>
+              <li>Use the Reference Box for guidance on the current change if you want ideas</li>
             </ul>
           </li>
           <li>
-            <strong>Viewing the Sequence</strong>:
+            <strong>Viewing your progress</strong>:
             <ul>
+                <li>The sequence counter will show you where you are in the sequence (1 of 3 for example)</li>
               <li>
                 Click the sequence counter in the main interface to view the
                 popup
               </li>
               <li>
-                The popup shows your sequence of patterns with the current one
+                The popup shows your entire sequence with the current pattern
                 highlighted in green
               </li>
-              <li>Click anywhere on the popup or press Escape to dismiss it</li>
+              <li>Click anywhere on the screen to hide the popup</li>
             </ul>
           </li>
-        </ol>
+        </ul>
       </div>
 
       <div id="reference">
         <h3>Using the Reference Box</h3>
         <p>The Reference Box helps you learn call change sequences:</p>
-        <ol>
-          <li>Click the Reference Box icon (magnifying glass) to open it</li>
-          <li>Select your desired number of bells (5-12)</li>
-          <li>Choose your preferred calling style (Up/Down)</li>
-          <li>Select your start and end patterns from the dropdowns</li>
-          <li>
-            The sequence will automatically update to show the required changes
-          </li>
-          <li>
-            You can:
-            <ul>
+        <ul>
+            <li>
+              <strong>Opening the Reference Box</strong>:
+              <ul>
+                  <li>Open the reference box using the magnifying glass icon in the main simulator</li>
+                  <li>Select your desired number of bells (5-12)</li>
+                  <li>Choose your preferred calling style (Up/Down)</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Set up the Reference Patterns</strong>:
+              <ul>
+                <li>Select your start and end patterns from the dropdowns</li>
+                <li>
+                  The sequence will automatically update to show the required changes
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Reference Box Uses</strong>:
+              <ul>
               <li>Load pairs of patterns to see the most efficient route</li>
               <li>Compare the calls needed for different calling styles</li>
               <li>
@@ -776,9 +790,9 @@
                 Help navigate through a pattern sequence if you are unsure of
                 where to start with a specific pair of patterns
               </li>
-            </ul>
-          </li>
-        </ol>
+              </ul>
+            </li>
+          </ul>
         <p>
           <strong>Important Notes:</strong>
         </p>
@@ -804,12 +818,12 @@
       <div id="jump-feature">
         <h3>Using the Jump Feature</h3>
         <p>The Jump feature allows you to instantly move to any pattern:</p>
-        <ol>
+        <ul>
           <li>First, select your desired pattern from the pattern dropdown in the main interface</li>
           <li>Click the target icon in the main interface</li>
           <li>The simulator will instantly update to show the selected pattern</li>
           <li>All bells will be in their correct positions for the new pattern</li>
-        </ol>
+        </ul>
         <p>
           <strong>Important Notes:</strong>
         </p>
@@ -828,13 +842,15 @@
             <strong>Restart Pattern</strong>:
             <ul>
               <li>Only available when a pattern sequence is active</li>
-              <li>Resets the bells to rounds order (1234...)</li>
+              <li>Displays a Restart notification until the next handstrokeif the bells are playing</li>
+              <li>Resets the bells to rounds</li>
               <li>Clears the change history except for the initial "Go!" entry</li>
               <li>Maintains the current pattern sequence but resets it to the start</li>
               <li>If playback is active, the reset will be queued and applied at the next handstroke</li>
-              <li>A notification will appear showing the pending reset</li>
             </ul>
           </li>
+          </ul>
+          <ul>
           <li>
             <strong>Reset Everything</strong>:
             <ul>
