@@ -420,4 +420,32 @@ V9.2 - 11/04/25
         - Added entries for the Research and Jump change icon
         - Removed unnecessary items to provide more space
         - Reworded existing items to add clarity
-        - Version update
+        - Version number update
+
+V9.3 - 12/04/25
+    User Guide Implementation
+        - Create user guide link (guide.html)
+        - Remove unnecessart entries from info box
+        - Version number update
+
+V9.3.1 - 13/0425
+    Updates to user guide and folder structure
+        - Change access from link to button in info box
+        - Amend some info box wording
+        - Create guide folder and add all assets and guide.html to folder
+        - Version number update
+
+V9.3.2 - 14/04/25
+    Updates to full user guide and pdf creation
+        - All areas completed 
+        - Images added to support text content
+        - PDF version created and sent to ART test group
+        - Version number updated
+
+V9.3.3 - 15/04/25
+    Amend UI for reference box
+        - Remove padding from inside of reference box container
+        - Add additional padding to top of reference header
+        - Add sticky attribute to header to prevent scrolling and allow user to view content further down the page without losing the close button visibility
+        - Version number update
+
