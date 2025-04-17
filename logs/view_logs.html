@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reference Box Stats</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        font-size: 1.5rem;
+      }
+      .filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        flex: 1;
+        min-width: 120px;
+      }
+      .filter-group label {
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+      select,
+      input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .custom-date-range {
+        display: none;
+        width: 100%;
+      }
+      .custom-date-range.show {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .clear-filters {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        align-self: flex-end;
+        font-size: 0.9rem;
+      }
+      .clear-filters:hover {
+        background-color: #c82333;
+      }
+      .stats,
+      .ip-stats {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #e9f7fe;
+        border-radius: 5px;
+        font-size: 0.9rem;
+      }
+      .ip-stats {
+        background-color: #f8f9fa;
+      }
+      .stats h3,
+      .ip-stats h3 {
+        margin-top: 0;
+        font-size: 1.1rem;
+      }
+      .stats p,
+      .ip-stats p {
+        margin: 5px 0;
+      }
+
+      /* Desktop table view */
+      @media (min-width: 768px) {
+        .table-container {
+          overflow-x: auto;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+          font-size: 0.9rem;
+        }
+        th,
+        td {
+          padding: 12px;
+          text-align: left;
+          border-bottom: 1px solid #ddd;
+        }
+        th {
+          background-color: #f8f8f8;
+          position: sticky;
+          top: 0;
+          white-space: nowrap;
+        }
+        tr:hover {
+          background-color: #f5f5f5;
+        }
+        .mobile-view {
+          display: none;
+        }
+      }
+
+      /* Mobile card view */
+      @media (max-width: 767px) {
+        .table-container {
+          display: none;
+        }
+        .mobile-view {
+          display: block;
+        }
+        .log-card {
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          padding: 15px;
+          margin-bottom: 10px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .log-card div {
+          margin-bottom: 8px;
+          display: flex;
+          justify-content: space-between;
+        }
+        .log-card .label {
+          font-weight: bold;
+          color: #666;
+          margin-right: 10px;
+        }
+        .log-card .value {
+          text-align: right;
+          word-break: break-word;
+        }
+      }
+
+      .refresh-btn {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+      .refresh-btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Reference Box Stats</h1>
+      <div class="filters">
+        <div class="filter-group">
+          <label for="dateFilter">Date Range</label>
+          <select id="dateFilter" onchange="handleDateFilterChange()">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="lastWeek">Last Week</option>
+            <option value="lastMonth">Last Month</option>
+            <option value="last3Months">Last 3 Months</option>
+            <option value="last6Months">Last 6 Months</option>
+            <option value="last12Months">Last 12 Months</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        <div id="customDateRange" class="custom-date-range">
+          <div class="filter-group">
+            <label for="startDate">Start Date</label>
+            <input type="date" id="startDate" />
+          </div>
+          <div class="filter-group">
+            <label for="endDate">End Date</label>
+            <input type="date" id="endDate" />
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label for="bellCount">Bell Count</label>
+          <select id="bellCount" onchange="applyFilters()">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="sourcePattern">Source Pattern</label>
+          <select id="sourcePattern" onchange="applyFilters()">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="targetPattern">Target Pattern</label>
+          <select id="targetPattern" onchange="applyFilters()">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="ipAddress">IP Address</label>
+          <select id="ipAddress" onchange="applyFilters()">
+            <option value="all">All</option>
+          </select>
+        </div>
+        <button class="clear-filters" onclick="clearFilters()">
+          Clear Filters
+        </button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="ip-stats" id="ipStats"></div>
+
+      <!-- Desktop table view -->
+      <div class="table-container">
+        <table id="logsTable">
+          <thead>
+            <tr>
+              <th>IP Address</th>
+              <th>Timestamp</th>
+              <th>Bell Count</th>
+              <th>Source Pattern</th>
+              <th>Target Pattern</th>
+            </tr>
+          </thead>
+          <tbody id="logsBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Mobile card view -->
+      <div class="mobile-view" id="mobileLogs"></div>
+
+      <button class="refresh-btn" onclick="loadLogs()">Refresh Logs</button>
+    </div>
+
+    <script>
+      let allLogs = [];
+      let uniqueValues = {
+        ipAddresses: new Set(),
+        bellCounts: new Set(),
+        sourcePatterns: new Set(),
+        targetPatterns: new Set(),
+      };
+
+      function handleDateFilterChange() {
+        const dateFilter = document.getElementById('dateFilter').value;
+        const customDateRange = document.getElementById('customDateRange');
+
+        if (dateFilter === 'custom') {
+          customDateRange.classList.add('show');
+        } else {
+          customDateRange.classList.remove('show');
+        }
+        applyFilters();
+      }
+
+      function updateFilterOptions() {
+        // Update IP address options
+        const ipAddressSelect = document.getElementById('ipAddress');
+        ipAddressSelect.innerHTML = '<option value="all">All</option>';
+        Array.from(uniqueValues.ipAddresses)
+          .sort()
+          .forEach(ip => {
+            ipAddressSelect.innerHTML += `<option value="${ip}">${ip}</option>`;
+          });
+
+        // Update bell count options
+        const bellCountSelect = document.getElementById('bellCount');
+        bellCountSelect.innerHTML = '<option value="all">All</option>';
+        Array.from(uniqueValues.bellCounts)
+          .sort()
+          .forEach(count => {
+            bellCountSelect.innerHTML += `<option value="${count}">${count}</option>`;
+          });
+
+        // Update source pattern options
+        const sourcePatternSelect = document.getElementById('sourcePattern');
+        sourcePatternSelect.innerHTML = '<option value="all">All</option>';
+        Array.from(uniqueValues.sourcePatterns)
+          .sort()
+          .forEach(pattern => {
+            sourcePatternSelect.innerHTML += `<option value="${pattern}">${pattern}</option>`;
+          });
+
+        // Update target pattern options
+        const targetPatternSelect = document.getElementById('targetPattern');
+        targetPatternSelect.innerHTML = '<option value="all">All</option>';
+        Array.from(uniqueValues.targetPatterns)
+          .sort()
+          .forEach(pattern => {
+            targetPatternSelect.innerHTML += `<option value="${pattern}">${pattern}</option>`;
+          });
+      }
+
+      function applyFilters() {
+        const dateFilter = document.getElementById('dateFilter').value;
+        const ipAddress = document.getElementById('ipAddress').value;
+        const bellCount = document.getElementById('bellCount').value;
+        const sourcePattern = document.getElementById('sourcePattern').value;
+        const targetPattern = document.getElementById('targetPattern').value;
+
+        let filteredLogs = [...allLogs];
+
+        // Apply date filter
+        if (dateFilter !== 'all') {
+          const now = new Date();
+          let startDate, endDate;
+
+          switch (dateFilter) {
+            case 'today':
+              startDate = new Date(now.setHours(0, 0, 0, 0));
+              endDate = new Date(now.setHours(23, 59, 59, 999));
+              break;
+            case 'yesterday':
+              startDate = new Date(now.setDate(now.getDate() - 1));
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date(startDate);
+              endDate.setHours(23, 59, 59, 999);
+              break;
+            case 'lastWeek':
+              startDate = new Date(now.setDate(now.getDate() - 7));
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date();
+              break;
+            case 'lastMonth':
+              startDate = new Date(now.setMonth(now.getMonth() - 1));
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date();
+              break;
+            case 'last3Months':
+              startDate = new Date(now.setMonth(now.getMonth() - 3));
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date();
+              break;
+            case 'last6Months':
+              startDate = new Date(now.setMonth(now.getMonth() - 6));
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date();
+              break;
+            case 'last12Months':
+              startDate = new Date(now.setMonth(now.getMonth() - 12));
+              startDate.setHours(0, 0, 0, 0);
+              endDate = new Date();
+              break;
+            case 'custom':
+              const startDateInput = document.getElementById('startDate').value;
+              const endDateInput = document.getElementById('endDate').value;
+              if (!startDateInput || !endDateInput) return;
+              startDate = new Date(startDateInput);
+              endDate = new Date(endDateInput);
+              endDate.setHours(23, 59, 59, 999);
+              break;
+          }
+
+          filteredLogs = filteredLogs.filter(log => {
+            const logDate = new Date(log.timestamp);
+            return logDate >= startDate && logDate <= endDate;
+          });
+        }
+
+        // Apply IP address filter
+        if (ipAddress !== 'all') {
+          filteredLogs = filteredLogs.filter(
+            log => log.ipAddress === ipAddress
+          );
+        }
+
+        // Apply bell count filter
+        if (bellCount !== 'all') {
+          filteredLogs = filteredLogs.filter(
+            log => log.bellCount === bellCount
+          );
+        }
+
+        // Apply source pattern filter
+        if (sourcePattern !== 'all') {
+          filteredLogs = filteredLogs.filter(
+            log => log.sourcePattern === sourcePattern
+          );
+        }
+
+        // Apply target pattern filter
+        if (targetPattern !== 'all') {
+          filteredLogs = filteredLogs.filter(
+            log => log.targetPattern === targetPattern
+          );
+        }
+
+        displayLogs(filteredLogs);
+        calculateStats(filteredLogs);
+        calculateIPStats(filteredLogs);
+      }
+
+      function clearFilters() {
+        document.getElementById('dateFilter').value = 'all';
+        document.getElementById('ipAddress').value = 'all';
+        document.getElementById('bellCount').value = 'all';
+        document.getElementById('sourcePattern').value = 'all';
+        document.getElementById('targetPattern').value = 'all';
+        document.getElementById('customDateRange').classList.remove('show');
+        applyFilters();
+      }
+
+      function loadLogs() {
+        fetch('reference-box-tracking.csv')
+          .then(response => response.text())
+          .then(data => {
+            const lines = data.split('\n');
+            allLogs = [];
+            uniqueValues = {
+              ipAddresses: new Set(),
+              bellCounts: new Set(),
+              sourcePatterns: new Set(),
+              targetPatterns: new Set(),
+            };
+
+            // Skip header line
+            for (let i = 1; i < lines.length; i++) {
+              if (lines[i].trim() === '') continue;
+
+              // Split the line and handle the IP address column
+              const columns = lines[i].split(',');
+              if (columns.length >= 5) {
+                // Ensure we have all columns including IP
+                const [
+                  ipAddress,
+                  timestamp,
+                  bellCount,
+                  sourcePattern,
+                  targetPattern,
+                ] = columns;
+
+                // Create log entry with correct column mapping
+                const logEntry = {
+                  ipAddress: ipAddress,
+                  timestamp: timestamp,
+                  bellCount: bellCount,
+                  sourcePattern: sourcePattern,
+                  targetPattern: targetPattern || '', // Handle empty target pattern
+                };
+
+                allLogs.push(logEntry);
+
+                // Collect unique values
+                uniqueValues.ipAddresses.add(ipAddress);
+                uniqueValues.bellCounts.add(bellCount);
+                uniqueValues.sourcePatterns.add(sourcePattern);
+                if (targetPattern) {
+                  uniqueValues.targetPatterns.add(targetPattern);
+                }
+              }
+            }
+
+            updateFilterOptions();
+            applyFilters();
+          })
+          .catch(error => {
+            console.error('Error loading logs:', error);
+            document.getElementById('logsBody').innerHTML =
+              '<tr><td colspan="5">Error loading logs. Please try again.</td></tr>';
+          });
+      }
+
+      function displayLogs(logs) {
+        const tbody = document.getElementById('logsBody');
+        const mobileLogs = document.getElementById('mobileLogs');
+        tbody.innerHTML = '';
+        mobileLogs.innerHTML = '';
+
+        logs.forEach(log => {
+          // Desktop table view
+          const row = document.createElement('tr');
+          Object.values(log).forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            row.appendChild(td);
+          });
+          tbody.appendChild(row);
+
+          // Mobile card view
+          const card = document.createElement('div');
+          card.className = 'log-card';
+          card.innerHTML = `
+            <div>
+              <span class="label">IP Address:</span>
+              <span class="value">${log.ipAddress}</span>
+            </div>
+            <div>
+              <span class="label">Timestamp:</span>
+              <span class="value">${log.timestamp}</span>
+            </div>
+            <div>
+              <span class="label">Bell Count:</span>
+              <span class="value">${log.bellCount}</span>
+            </div>
+            <div>
+              <span class="label">Source Pattern:</span>
+              <span class="value">${log.sourcePattern}</span>
+            </div>
+            <div>
+              <span class="label">Target Pattern:</span>
+              <span class="value">${log.targetPattern}</span>
+            </div>
+          `;
+          mobileLogs.appendChild(card);
+        });
+      }
+
+      function calculateStats(logs) {
+        const stats = {
+          totalTransitions: logs.length,
+          bellCounts: {},
+          patterns: {},
+        };
+
+        logs.forEach(log => {
+          // Count bell counts
+          stats.bellCounts[log.bellCount] =
+            (stats.bellCounts[log.bellCount] || 0) + 1;
+
+          // Count patterns
+          stats.patterns[log.sourcePattern] =
+            (stats.patterns[log.sourcePattern] || 0) + 1;
+          stats.patterns[log.targetPattern] =
+            (stats.patterns[log.targetPattern] || 0) + 1;
+        });
+
+        // Display statistics
+        const statsDiv = document.getElementById('stats');
+        statsDiv.innerHTML = `
+          <h3>Statistics</h3>
+          <p>Total Transitions: ${stats.totalTransitions}</p>
+          <p>Most Common Bell Count: ${
+            Object.entries(stats.bellCounts).sort(
+              (a, b) => b[1] - a[1]
+            )[0]?.[0] || 'N/A'
+          }</p>
+          <p>Most Common Pattern: ${
+            Object.entries(stats.patterns).sort(
+              (a, b) => b[1] - a[1]
+            )[0]?.[0] || 'N/A'
+          }</p>
+        `;
+      }
+
+      function calculateIPStats(logs) {
+        const ipStats = {};
+
+        logs.forEach(log => {
+          ipStats[log.ipAddress] = (ipStats[log.ipAddress] || 0) + 1;
+        });
+
+        // Sort IPs by number of transitions
+        const sortedIPs = Object.entries(ipStats)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10); // Show top 10 IPs
+
+        const ipStatsDiv = document.getElementById('ipStats');
+        ipStatsDiv.innerHTML = `
+          <h3>Top Users by IP Address</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>IP Address</th>
+                <th>Number of Transitions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sortedIPs
+                .map(
+                  ([ip, count]) => `
+                <tr>
+                  <td>${ip}</td>
+                  <td>${count}</td>
+                </tr>
+              `
+                )
+                .join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      // Set up event listeners for custom date range
+      document.getElementById('startDate').addEventListener('change', () => {
+        if (document.getElementById('dateFilter').value === 'custom') {
+          applyFilters();
+        }
+      });
+
+      document.getElementById('endDate').addEventListener('change', () => {
+        if (document.getElementById('dateFilter').value === 'custom') {
+          applyFilters();
+        }
+      });
+
+      // Load logs when page loads
+      document.addEventListener('DOMContentLoaded', loadLogs);
+    </script>
+  </body>
+</html>

@@ -1782,7 +1782,7 @@
     <div class="image-wrapper">
       <br />
       <span class="center-text"
-        >v9.3.1 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
+        >v9.4 &copy; 2025<br /><a href="mailto:contact@callchangesim.co.uk"
           >contact@callchangesim.co.uk</a
         ></span
       >
@@ -4534,6 +4534,9 @@
           return;
         }
 
+        // Log the transition
+        logTransition(referenceBellCount, sourcePattern, targetPattern);
+
         // Get the appropriate swaps display and bell orders based on calling style
         const swapsDisplay =
           currentCallingStyle === 'up'
@@ -4715,6 +4718,31 @@
       document.addEventListener('click', handleClick, true);
       document.addEventListener('mousedown', handleClick, true);
       document.addEventListener('touchstart', handleClick, true);
+
+      // Add function to log transitions
+      function logTransition(bellCount, sourcePattern, targetPattern) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timestamp = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+        // Create log entry with correct column order: timestamp,bellCount,sourcePattern,targetPattern
+        const logEntry = `${timestamp},${bellCount},${sourcePattern},${targetPattern}\n`;
+
+        // Send the log entry to the server
+        fetch('log_transition.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+          body: logEntry,
+        }).catch(error => {
+          console.error('Error logging transition:', error);
+        });
+      }
     </script>
   </body>
 </html>
